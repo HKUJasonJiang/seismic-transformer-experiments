@@ -16,6 +16,7 @@ def main():
     p.add_argument("--login-stdin",action="store_true")
     p.add_argument("--data",action="store_true")
     p.add_argument("--run",type=str)
+    p.add_argument("--summary",action="store_true")
     args=p.parse_args()
     repo=os.environ["HF_REPO_ID"]
     if args.login_stdin:
@@ -40,6 +41,11 @@ def main():
         result=api.upload_folder(repo_id=repo,repo_type="dataset",folder_path=STAGE/"reports"/args.run,path_in_repo="reports/"+args.run,
                                  commit_message="Archive fit metrics and response comparison figures")
         print(json.dumps({"report_commit":result.oid}),flush=True)
+    if args.summary:
+        result=api.upload_folder(repo_id=repo,repo_type="dataset",folder_path=STAGE/"reports",path_in_repo="reports/stage1",
+                                 allow_patterns=["poc_result.md","poc_fit24_quality.json","poc_fit24_derived.json","model_check_patch60.json"],
+                                 commit_message="Archive POC summary and simulation quality checks")
+        print(json.dumps({"summary_commit":result.oid}),flush=True)
 
 
 if __name__=="__main__":main()
