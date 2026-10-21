@@ -43,12 +43,17 @@ class Intervention(nn.Module):
         self.base.decoder.set_response_scales(scales.displacement_m,scales.acceleration_m_s2)
         if mode=='fixed_head':self.base.decoder=FixedHead(config,scales)
         if mode in ('basis_joint','free_basis'):self.base.decoder=SineFloorQueryDecoder(config,scales)
+        if mode in ('wide_joint','free_wide'):
+            d=config.d_model;w=2*d
+            self.base.decoder.fusion=nn.Sequential(nn.LayerNorm(2*d),nn.Linear(2*d,w),nn.GELU(),nn.Linear(w,w),nn.GELU())
+            self.base.decoder.displacement_head=nn.Linear(w,config.patch_size)
+            self.base.decoder.acceleration_head=nn.Linear(w,config.patch_size)
         if mode=='frozen_A':
             state=torch.load(source_checkpoint,map_location='cpu',weights_only=False)['model']
             for prefix,mod in (('encoder.',self.base.encoder),('structure_encoder.',self.base.structure_encoder)):
                 mod.load_state_dict({k[len(prefix):]:v for k,v in state.items() if k.startswith(prefix)})
                 mod.requires_grad_(False)
-        if mode in ('free_latent','free_basis'):
+        if mode in ('free_latent','free_basis','free_wide'):
             self.base.encoder.requires_grad_(False)
             k=math.ceil(batch['ground'].shape[1]/config.patch_size)
             self.latents=nn.Parameter(torch.randn(len(batch['case_ids']),k,config.d_model)*.1)
@@ -56,7 +61,7 @@ class Intervention(nn.Module):
 
     def forward(self,b):
         structure=self.base.structure_encoder(b['attributes'],b['structure_type'])
-        if self.mode in ('free_latent','free_basis'):
+        if self.mode in ('free_latent','free_basis','free_wide'):
             ix=torch.tensor([self.lookup[x] for x in b['case_ids']],device=structure.device)
             latent=self.latents[ix]
             p=self.base.config.patch_size
@@ -159,7 +164,7 @@ def main():
               'case_ids':batch['case_ids'],'train_records':sorted({x['record_id'] for x in entries.values()}),
               'trainable_parameters':sum(x.numel() for x in params),'torch':torch.__version__,'gpu':torch.cuda.get_device_name(device),
               'selection':'training-only worst normalized per-height median/P90; no validation or test read',
-              'deployable_inputs':arm not in ('free_latent','free_basis')}
+              'deployable_inputs':arm not in ('free_latent','free_basis','free_wide')}
         if arm=='frozen_A':prov['source_checkpoint_sha256']=hashlib.sha256((STAGE/conf['source_checkpoint']).read_bytes()).hexdigest()
         if args.resume:prov['resume_sha256']=hashlib.sha256((STAGE/args.resume).read_bytes()).hexdigest()
         json_write(run/'provenance.json',prov);curve=[];best=math.inf;best_step=0;start=time.perf_counter()
