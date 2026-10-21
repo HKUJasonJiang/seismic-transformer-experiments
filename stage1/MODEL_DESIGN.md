@@ -111,3 +111,11 @@ python stage1/scripts/check_model.py
 首轮使用上述全训练集 RMS 尺度。低 PGA、小位移算例的相对误差较大，因此另外建立 `poc_balanced.json` 实验：每个通道的逐算例 MSE 除以该训练算例真值的均方，再对算例等权平均。分母下限为全训练集 RMS 的 1% 的平方，避免近零响应权重无界。
 
 这些尺度只用于训练损失；模型输入与输出的物理单位不变，推理时不需要响应真值。原始损失和精调结果保留，各实验使用独立 run ID。
+
+## 非线性诊断后保留的拟合模型
+
+`basis_joint` 保留上述 A、patch=60 和 128 维 latent。B 改为预测八组随时间变化的位移/加速度系数，再用楼层坐标的完备离散正弦基组合出查询层响应，代码在 `src/basis_decoder.py`。当前实现明确要求 N≤8；3/5/8 层分别使用前 N 个基，基由 N 和查询层 i 确定，不是真实振型标签，也不是时间频域 FNO。
+
+该版本已经在原 65 个非线性训练样本上通过每类层数的拟合门槛。与原 B、冻结 A、固定输出头、近等参数量的加宽 B 比较，见 `DIAGNOSIS_PLAN.md` 和私有诊断报告。不同输出表示的参数量与优化难度不同，结论限于当前数据和计算预算。
+
+`scripts/export_nonlinear.py` 导出不含优化器或逐算例 latent 表的 `inference.pt`；`src/nonlinear_inference.py` 的 `load_query_model` 读取后仍使用原 `SeismicQueryModel.forward` 输入契约。推理仅需地震动、建筑属性、类型、楼层查询及时间 mask，不需要真实屋顶曲线或响应标签。该推理核验和全部训练层的独立查询已在 5090 通过。

@@ -19,7 +19,9 @@ def main():
     results={path.parent.name:json.loads(path.read_text()) for path in paths if (path.parent/'curve.json').exists()}
     chosen=results[args.selected]
     assert chosen['provenance']['deployable_inputs'] and chosen['arm']!='fixed_head'
-    lines=['# 3/5/8 层非线性训练拟合诊断','','只使用原 7 条训练波的 65 个 DS_ref>2 算例。没有生成新数据，没有读取验证或测试标签。以下全部为训练拟合，不能解释成泛化。','',
+    valpath=STAGE/'reports'/args.selected/'validation_result.json'
+    validation=json.loads(valpath.read_text()) if valpath.exists() else None
+    lines=['# 3/5/8 层非线性训练拟合诊断','','所有训练对照只使用原 7 条训练波的 65 个 DS_ref>2 算例，没有生成新数据。模型/权重只按训练拟合选择。以下对照表全部为训练拟合；若存在模型冻结后的一次开发验证，单独列在末尾。旧测试波未读取。','',
            '| 运行 | 位移 L2 中位数 | 加速度 L2 中位数 | 加速度 P90 | 每类层数门槛 | 步数 | 可训练参数 |',
            '| --- | ---: | ---: | ---: | --- | ---: | ---: |']
     for name,r in results.items():
@@ -37,9 +39,16 @@ def main():
        '![对照](comparison.png)','','![典型顶层时程](roof_examples.png)','',
        f'![学习曲线](../{args.selected}/learning_curve.png)','']
     for n in (3,5,8):lines+=[f'![{n} 层全部时程](../{args.selected}/fit_{n:02d}F.png)','']
-    lines+=[f'![最差算例](../{args.selected}/fit_worst.png)','','下一步只在训练拟合稳定后开展泛化试验；旧测试记录已使用，不能在反复调试后继续当作独立最终测试。']
+    lines+=[f'![最差算例](../{args.selected}/fit_worst.png)','']
+    if validation:
+        lines+=['## 拟合通过并冻结模型后的一次开发验证','','只查看原 validation 波的 DS_ref>2 算例，未据此继续调模型。这条波在历史开发中已经使用，不能称为新的独立最终测试。','',
+                '| 层数 | 样本 | 位移 L2 中位数 | 加速度 L2 中位数 | PIDR / PFA 逐层误差中位数 |','| --- | ---: | ---: | ---: | --- |']
+        for n in (3,5,8):
+            v=validation['summary']['by_stories'][str(n)]['all']
+            lines.append(f"| {n} | {v['count']} | {v['u_median_relative_l2']:.2%} | {v['a_median_relative_l2']:.2%} | {v['PIDR_floor_median_relative_error']:.2%} / {v['PFA_floor_median_relative_error']:.2%} |")
+    lines+=['','旧测试记录已使用，不能在反复调试后继续当作独立最终测试。当前单随机种子，未证明未见层数、其他结构类别或真实建筑泛化。']
     (output/'README.md').write_text('\n'.join(lines)+'\n',encoding='utf-8')
-    json_write(output/'summary.json',{'selected':args.selected,'runs':{name:{'arm':r['arm'],'status':r['status'],'best_step':r['best_step'],'summary':r['summary'],'provenance':r['provenance']} for name,r in results.items()},'validation':'NOT_READ','test':'NOT_READ'})
+    json_write(output/'summary.json',{'selected':args.selected,'runs':{name:{'arm':r['arm'],'status':r['status'],'best_step':r['best_step'],'summary':r['summary'],'provenance':r['provenance']} for name,r in results.items()},'development_validation_after_freeze':validation,'test':'NOT_READ'})
     fig,axes=plt.subplots(1,2,figsize=(12,4),constrained_layout=True)
     names=list(results)
     for ax,c,label in zip(axes,('u','a'),('Displacement','Absolute acceleration')):
