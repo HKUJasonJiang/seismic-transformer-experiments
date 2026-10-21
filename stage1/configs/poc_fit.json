@@ -1,0 +1,13 @@
+{
+  "run_id": "poc-fit24-patch60-seed20261021",
+  "seed": 20261021,
+  "epochs": 1500,
+  "batch_size": 24,
+  "learning_rate": 0.001,
+  "weight_decay": 0.0,
+  "evaluate_every": 25,
+  "target_median_relative_l2": 0.1,
+  "device": "cuda:0",
+  "dataset": "data/poc_fit24/manifest.json",
+  "model_config": "configs/model.json"
+}

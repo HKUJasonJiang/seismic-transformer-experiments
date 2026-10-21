@@ -1,0 +1,41 @@
+"""HF authentication through stdin and dataset/artifact synchronization on 5090."""
+import argparse
+import json
+from pathlib import Path
+import sys
+sys.dont_write_bytecode=True
+
+from huggingface_hub import HfApi,login
+
+STAGE=Path(__file__).resolve().parents[1]
+REPO="JasonXF/seismic-transformer-stage1"
+
+
+def main():
+    p=argparse.ArgumentParser()
+    p.add_argument("--login-stdin",action="store_true")
+    p.add_argument("--data",action="store_true")
+    p.add_argument("--run",type=str)
+    args=p.parse_args()
+    if args.login_stdin:
+        secret=sys.stdin.readline().strip()
+        if not secret:raise RuntimeError("No credential received on stdin")
+        login(token=secret,add_to_git_credential=False)
+        del secret
+    api=HfApi()
+    who=api.whoami()
+    info=api.repo_info(REPO,repo_type="dataset")
+    # User authorized public GitHub code, while simulation data stays private.
+    if not info.private:api.update_repo_settings(REPO,repo_type="dataset",private=True)
+    print(json.dumps({"account":who["name"],"repo":REPO,"private":True}),flush=True)
+    if args.data:
+        result=api.upload_folder(repo_id=REPO,repo_type="dataset",folder_path=STAGE/"data/poc_fit24",path_in_repo="stage1/poc_fit24",
+                                 commit_message="Add C++ small-sample learnability dataset")
+        print(json.dumps({"dataset_commit":result.oid}),flush=True)
+    if args.run:
+        result=api.upload_folder(repo_id=REPO,repo_type="dataset",folder_path=STAGE/"runs"/args.run,path_in_repo="artifacts/"+args.run,
+                                 allow_patterns=["*.pt","*.json","*.npz"],commit_message="Archive small-sample fit checkpoint and provenance")
+        print(json.dumps({"artifact_commit":result.oid}),flush=True)
+
+
+if __name__=="__main__":main()
