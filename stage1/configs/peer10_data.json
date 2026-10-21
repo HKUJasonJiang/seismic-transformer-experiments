@@ -1,0 +1,15 @@
+{
+  "dataset_id": "peer10_nonlinear_v1",
+  "stories": [3, 5, 8],
+  "period_ratios": [0.8, 1.0, 1.2],
+  "record_count": 10,
+  "split_record_counts": [7, 1, 2],
+  "fixed_pga_g": [0.1, 0.35, 0.6],
+  "strong_target_PIDR": 0.03,
+  "strong_accept_PIDR": [0.023, 0.04],
+  "maximum_search_pga_g": 3.0,
+  "maximum_search_trials": 10,
+  "normalized_duplicate_correlation": 0.995,
+  "workers": 4,
+  "seed": 20261021
+}
