@@ -9,4 +9,5 @@ User instruction recorded 2026-10-21: design and edit code locally; execute expe
 - Check current GPU utilization/processes before launching a job. Do not stop unrelated processes. Keep experiment jobs and outputs in a dedicated project directory and record the exact Git revision, configuration, seed, and data revision.
 - GitHub stores source, configurations, Markdown, and small result summaries. Hugging Face stores dataset shards and model checkpoints. Resolve repository names from user-provided URLs rather than inventing remote destinations.
 - Credentials must come from the relevant app connection, SSH authentication, or user-configured server credential/environment facilities. Never ask the user to paste tokens into chat, store them in Git, or print their values.
-- No remote has been configured yet. GitHub/HF repository URLs and server authentication for those repositories are pending. Existing local preview data remains available for an initial transfer.
+- The user explicitly chose public experimental code on 2026-10-21. Data, checkpoints, native solver dependencies and server access details stay private. Authentication is configured on the designated server.
+

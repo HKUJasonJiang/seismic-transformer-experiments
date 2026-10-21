@@ -94,6 +94,25 @@ class ModelChecks(unittest.TestCase):
         with self.assertRaises(ValueError):
             response_indicators(subset, torch.full((3,2),3.), altered[3])
 
+    def test_relative_loss_balances_weak_and_strong_cases(self):
+        x=inputs()
+        fm=x[3]>0
+        mask=x[4][:,:,None]&fm[:,None,:]
+        amplitude=torch.tensor([.001,.01,.1])[:,None,None]
+        ut=torch.where(mask,amplitude.expand(3,43,8),float("nan"))
+        at=ut*100
+        prediction={"displacement":(ut.nan_to_num()*1.1).requires_grad_(),
+                    "acceleration":(at.nan_to_num()*1.1).requires_grad_(),
+                    "floor_mask":fm,"time_mask":x[4],"stories":x[1][:,0].long()}
+        target={"displacement":ut,"acceleration":at,
+                "story_heights":torch.where(fm,3.,0.),"floor_ids":x[3]}
+        loss=response_loss(prediction,target,ResponseScales(.01,1.,.003),normalization="per_case")
+        for key in ("displacement","acceleration","drift"):
+            self.assertAlmostEqual(float(loss[key].detach()),.01,places=6)
+        loss["total"].backward()
+        self.assertTrue(torch.isfinite(prediction["displacement"].grad).all())
+        self.assertTrue(torch.isfinite(prediction["acceleration"].grad).all())
+
     def test_padding_excluded_from_loss_and_train_scales(self):
         x = inputs()
         out = self.model(*x)

@@ -125,7 +125,7 @@ def main():
             for group in optimizer.param_groups:group["lr"]=lr
         model.train();optimizer.zero_grad(set_to_none=True)
         output=model(batch["ground"],batch["attributes"],batch["structure_type"],batch["floor_ids"],batch["time_mask"])
-        parts=response_loss(output,batch,scales)
+        parts=response_loss(output,batch,scales,normalization=conf.get("loss_normalization","global"))
         if not torch.isfinite(parts["total"]):raise RuntimeError("Nonfinite training loss")
         parts["total"].backward();torch.nn.utils.clip_grad_norm_(model.parameters(),1.)
         optimizer.step()

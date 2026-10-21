@@ -69,10 +69,12 @@ class ResponseScales:
 
 
 def response_loss(prediction, target, scales: ResponseScales,
-                  weights=(1., 1., 1.)):
+                  weights=(1., 1., 1.), *, normalization="global"):
     """Target must contain ALL physical floors, with normalized mask weighting."""
     if len(weights) != 3 or any(not math.isfinite(w) or w < 0 for w in weights) or sum(weights) <= 0:
         raise ValueError("Need three nonnegative weights, at least one positive")
+    if normalization not in ("global", "per_case"):
+        raise ValueError("Unknown loss normalization")
     fm, tm = prediction["floor_mask"], prediction["time_mask"]
     validate_full_floor_order(target["floor_ids"], fm, prediction["stories"])
     if target["displacement"].shape != prediction["displacement"].shape or target["acceleration"].shape != prediction["acceleration"].shape:
@@ -90,10 +92,17 @@ def response_loss(prediction, target, scales: ResponseScales,
     at = clean(target["acceleration"])
     drift = interstory_drift(u, target["story_heights"], fm)
     drift_target = interstory_drift(ut, target["story_heights"], fm)
-    parts = {
-        "displacement": per_building_mean(((u-ut)/scales.displacement_m).square(), mask).mean(),
-        "acceleration": per_building_mean(((a-at)/scales.acceleration_m_s2).square(), mask).mean(),
-        "drift": per_building_mean(((drift-drift_target)/scales.drift_ratio).square(), mask).mean(),
-    }
+    parts = {}
+    for key,pred,truth,scale in (
+        ("displacement",u,ut,scales.displacement_m),
+        ("acceleration",a,at,scales.acceleration_m_s2),
+        ("drift",drift,drift_target,scales.drift_ratio)):
+        mse=per_building_mean((pred-truth).square(),mask)
+        denominator=scale**2
+        if normalization=="per_case":
+            # Training-label RMS balances weak/strong motions without changing model inputs.
+            # A training-derived floor protects near-zero response cases.
+            denominator=per_building_mean(truth.square(),mask).detach().clamp_min((.01*scale)**2)
+        parts[key]=(mse/denominator).mean()
     parts["total"] = sum(w*parts[k] for w, k in zip(weights, ("displacement", "acceleration", "drift")))
     return parts
