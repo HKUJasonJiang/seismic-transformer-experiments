@@ -58,13 +58,17 @@ def main():
                     'model': {k: v.detach().cpu() for k, v in student.state_dict().items()},
                     'source_checkpoint_sha256': results['student']['checkpoint_sha256']}, export_path)
         loaded = load_model(export_path, conf['device'])
+        assert state_hash(loaded) == state_hash(student)
+        export_difference = {}
         with torch.no_grad():
             p = predict(loaded, held['ground'], held['attributes'], held['structure_type'], held['floor_ids'], held['time_mask'])
             original, _, _ = student(held)
             roof_ids = held['attributes'][:, :1].long()
             roof = predict(loaded, held['ground'], held['attributes'], held['structure_type'], roof_ids, held['time_mask'])
             for k in CHANNELS:
-                torch.testing.assert_close(p[k], original[k], rtol=0, atol=0)
+                # Identical weights; permit ordinary GPU floating-point dispatch differences.
+                export_difference[k + '_mse'] = float((p[k].double()-original[k].double()).square().mean())
+                assert export_difference[k + '_mse'] <= (1e-12 if k == 'displacement' else 1e-10)
                 wanted = p[k].gather(2, (roof_ids-1)[:, None, :].expand(-1, p[k].shape[1], -1))
                 torch.testing.assert_close(roof[k], wanted, rtol=1e-5, atol=1e-6)
             try:
@@ -73,7 +77,7 @@ def main():
                 pass
             else:
                 raise AssertionError('Out-of-building query was not rejected')
-        parts.update(same_A_initialization='PASS', same_B_initialization='PASS', source_and_checkpoint_hashes='PASS',
+        parts.update(export_prediction_difference=export_difference, same_A_initialization='PASS', same_B_initialization='PASS', source_and_checkpoint_hashes='PASS',
                      saved_waveform_MSE_reproduction='PASS', frozen_B_equal_to_teacher_B='PASS',
                      deployment_without_labels_or_C='PASS', roof_only_query='PASS', invalid_floor_rejected='PASS', inference_sha256=file_hash(export_path))
         audit['protocols'][protocol] = parts

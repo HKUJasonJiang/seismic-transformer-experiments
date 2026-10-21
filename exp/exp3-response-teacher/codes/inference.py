@@ -12,7 +12,7 @@ def load_model(path, device='cpu'):
     conf = dict(checkpoint['run_config'], device=device)
     model = fresh(ModelConfig(**checkpoint['model_config']), ResponseScales(**checkpoint['scales']), conf)
     model.load_state_dict(checkpoint['model'])
-    return model.eval()
+    return model.eval().requires_grad_(False)
 
 
 @torch.no_grad()
