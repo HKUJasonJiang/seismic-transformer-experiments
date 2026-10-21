@@ -19,7 +19,8 @@ def load_split(folder,split,device):
 
 
 def slice_batch(batch,indices):
-    return {k:v[indices] if torch.is_tensor(v) else [v[int(i)] for i in indices] for k,v in batch.items()}
+    numbers=indices.detach().cpu().tolist()
+    return {k:v[indices] if torch.is_tensor(v) else [v[i] for i in numbers] for k,v in batch.items()}
 
 
 @torch.no_grad()
