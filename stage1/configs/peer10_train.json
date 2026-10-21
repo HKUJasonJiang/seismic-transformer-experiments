@@ -1,0 +1,17 @@
+{
+  "run_id": "peer10-358-patch60-seed20261021",
+  "dataset": "data/peer10_nonlinear_v1",
+  "model_config": "configs/model.json",
+  "seed": 20261021,
+  "epochs": 2000,
+  "minimum_epochs": 1000,
+  "patience_epochs": 400,
+  "batch_size": 48,
+  "learning_rate": 0.0003,
+  "minimum_learning_rate": 0.00001,
+  "warmup_epochs": 20,
+  "weight_decay": 0.0001,
+  "evaluate_every": 25,
+  "loss_normalization": "per_case",
+  "device": "cuda:0"
+}
