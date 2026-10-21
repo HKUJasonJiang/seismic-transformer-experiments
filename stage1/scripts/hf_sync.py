@@ -36,6 +36,9 @@ def main():
         result=api.upload_folder(repo_id=REPO,repo_type="dataset",folder_path=STAGE/"runs"/args.run,path_in_repo="artifacts/"+args.run,
                                  allow_patterns=["*.pt","*.json","*.npz"],commit_message="Archive small-sample fit checkpoint and provenance")
         print(json.dumps({"artifact_commit":result.oid}),flush=True)
+        result=api.upload_folder(repo_id=REPO,repo_type="dataset",folder_path=STAGE/"reports"/args.run,path_in_repo="reports/"+args.run,
+                                 commit_message="Archive fit metrics and response comparison figures")
+        print(json.dumps({"report_commit":result.oid}),flush=True)
 
 
 if __name__=="__main__":main()
