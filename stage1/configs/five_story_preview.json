@@ -1,0 +1,22 @@
+{
+  "name": "five_story_T1_preview",
+  "stories": 5,
+  "story_height_m": 3.0,
+  "floor_area_m2": 1000.0,
+  "mass_per_area_kg_m2": 1000.0,
+  "year": 2002,
+  "fortification_intensity": 8,
+  "structure_type": 0,
+  "site_category": 2,
+  "site_group": 1,
+  "period_ratios": [0.8, 1.0, 1.2],
+  "pga_g": [0.1, 0.35, 0.4, 0.6],
+  "damping_ratio": 0.05,
+  "integration_dt_s": 0.00025,
+  "tail_s": 15.0,
+  "reference_drift_thresholds": [0.005, 0.008, 0.02, 0.05],
+  "explicit_failure_drift": 0.05,
+  "ground_motion_relative_path": "mdof-workbench/data/GM/PEER/peer_1.txt",
+  "compatibility": "legacy_0_1",
+  "source_parameter_policy": "Generate five-story baseline with archived parameter generator; scale initial stiffness and yield force together; all response integration uses the new C++ backend."
+}

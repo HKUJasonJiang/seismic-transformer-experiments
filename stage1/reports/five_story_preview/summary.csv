@@ -1,0 +1,13 @@
+﻿period_ratio,T1_s,pga_g,max_PIDR_percent,DS_ref,critical_story,roof_disp_mm,max_PFA_g,material_failure,hdf5
+0.8,0.23094088539104013,0.1,0.03437981599482079,0,1,3.5393078759154837,0.2639864424343732,False,D:\BaiduSyncdisk\Paper\2-SeismicTransformer\experiment\stage1\data\five_story_preview\r0.80_pga0.1g.h5
+0.8,0.23094088539104013,0.35,0.23330714666238853,0,1,19.479580572768157,0.6635786775058714,False,D:\BaiduSyncdisk\Paper\2-SeismicTransformer\experiment\stage1\data\five_story_preview\r0.80_pga0.35g.h5
+0.8,0.23094088539104013,0.4,0.2618959772509863,0,1,22.80919653567183,0.6797318265532406,False,D:\BaiduSyncdisk\Paper\2-SeismicTransformer\experiment\stage1\data\five_story_preview\r0.80_pga0.4g.h5
+0.8,0.23094088539104013,0.6,0.9730907149135777,2,1,48.96686251035405,1.5052035286335754,False,D:\BaiduSyncdisk\Paper\2-SeismicTransformer\experiment\stage1\data\five_story_preview\r0.80_pga0.6g.h5
+1.0,0.28867610673880006,0.1,0.061408982930702544,0,1,5.96710442703183,0.28179883400803446,False,D:\BaiduSyncdisk\Paper\2-SeismicTransformer\experiment\stage1\data\five_story_preview\r1.00_pga0.1g.h5
+1.0,0.28867610673880006,0.35,0.7469236353809077,1,1,46.595843699085634,0.67781001551239,False,D:\BaiduSyncdisk\Paper\2-SeismicTransformer\experiment\stage1\data\five_story_preview\r1.00_pga0.35g.h5
+1.0,0.28867610673880006,0.4,1.270701586147406,2,1,56.69496612918647,0.6810353345572244,False,D:\BaiduSyncdisk\Paper\2-SeismicTransformer\experiment\stage1\data\five_story_preview\r1.00_pga0.4g.h5
+1.0,0.28867610673880006,0.6,3.783314926892877,3,1,147.19740335621202,0.7768029979107479,False,D:\BaiduSyncdisk\Paper\2-SeismicTransformer\experiment\stage1\data\five_story_preview\r1.00_pga0.6g.h5
+1.2,0.34641132808656083,0.1,0.054574308272304,0,1,5.684337690260505,0.1895440445543296,False,D:\BaiduSyncdisk\Paper\2-SeismicTransformer\experiment\stage1\data\five_story_preview\r1.20_pga0.1g.h5
+1.2,0.34641132808656083,0.35,2.254982711701084,3,1,96.11982478160017,0.5256871456285337,False,D:\BaiduSyncdisk\Paper\2-SeismicTransformer\experiment\stage1\data\five_story_preview\r1.20_pga0.35g.h5
+1.2,0.34641132808656083,0.4,2.880200802216168,3,1,119.37427156302996,0.5521128917978647,False,D:\BaiduSyncdisk\Paper\2-SeismicTransformer\experiment\stage1\data\five_story_preview\r1.20_pga0.4g.h5
+1.2,0.34641132808656083,0.6,4.426500171389217,3,1,186.3818069953192,0.6895596672498121,False,D:\BaiduSyncdisk\Paper\2-SeismicTransformer\experiment\stage1\data\five_story_preview\r1.20_pga0.6g.h5

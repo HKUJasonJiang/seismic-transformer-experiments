@@ -1,0 +1,23 @@
+{
+  "independent_eigenvalue_check": "all five modal periods for every case passed rtol=1e-10",
+  "peak_step_change_max_percent": {
+    "max_floor_PIDR_change_percent": 2.5116867168422496,
+    "max_floor_PFA_change_percent": 3.390302575064177,
+    "max_floor_displacement_change_percent": 1.1341016861357012,
+    "u_relative_L2_percent": 4.211234434408877,
+    "a_relative_L2_percent": 5.252330945963792
+  },
+  "production_dt_s": 0.00025,
+  "coarse_dt_s": 0.0005,
+  "case_count": 12,
+  "failure_count": 0,
+  "raw_HDF5_alignment": "legacy displacement/drift advanced by one integration interval; raw results preserved",
+  "plot_CSV_alignment": "displacement reindexed by one row to the physical current time with known zero initial displacement; accelerations unchanged",
+  "plot_and_CSV_interval_s": 0.002,
+  "smoothing": "none; regular point selection for display/CSV only",
+  "peak_grid": "all original 0.00025 s integration samples; not display-decimated samples",
+  "solver_DLL_sha256": "0585940408ee3218c2d0e3c15aa57970cb846366432571d119005407f58b1d20",
+  "script_sha256": "b7510b770a7f54e41bd0bec771acdaa61d7ca940689b90e590317c538fd2c956",
+  "config_sha256": "4b8c8c246df24bc427dace7d9bcb4553b539417782f7b56ca2edd95d1c48ca0b",
+  "ground_sha256": "39f75a483f41adfd238844eff82307a2dfdf19538ba915ef5354b4af97b4905c"
+}

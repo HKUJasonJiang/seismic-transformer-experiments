@@ -1,0 +1,200 @@
+{
+  "config": {
+    "name": "five_story_T1_preview",
+    "stories": 5,
+    "story_height_m": 3.0,
+    "floor_area_m2": 1000.0,
+    "mass_per_area_kg_m2": 1000.0,
+    "year": 2002,
+    "fortification_intensity": 8,
+    "structure_type": 0,
+    "site_category": 2,
+    "site_group": 1,
+    "period_ratios": [
+      0.8,
+      1.0,
+      1.2
+    ],
+    "pga_g": [
+      0.1,
+      0.35,
+      0.4,
+      0.6
+    ],
+    "damping_ratio": 0.05,
+    "integration_dt_s": 0.00025,
+    "tail_s": 15.0,
+    "reference_drift_thresholds": [
+      0.005,
+      0.008,
+      0.02,
+      0.05
+    ],
+    "explicit_failure_drift": 0.05,
+    "ground_motion_relative_path": "mdof-workbench/data/GM/PEER/peer_1.txt",
+    "compatibility": "legacy_0_1",
+    "source_parameter_policy": "Generate five-story baseline with archived parameter generator; scale initial stiffness and yield force together; all response integration uses the new C++ backend."
+  },
+  "source": {
+    "parameter_generator_executable": "D:\\BaiduSyncdisk\\Paper\\2-SeismicTransformer\\3-Data\\MDOF_BenchMark\\Flexural_Shear_0.1.exe",
+    "executable_sha256": "20cfdb7a79b70ab94a650023a7e95c3a145ecc842a4266fd2cac315348117e31",
+    "material_export_sha256": "a9730947874427452c2525b58a2b19224566bbbc82bd39e757c65d12c76f53a9",
+    "material_export": "D:\\BaiduSyncdisk\\Paper\\2-SeismicTransformer\\experiment\\stage1\\runs\\five_story_preview\\material_source\\Results\\matcode1.txt",
+    "mode": "matcodeinput=3: parameter export only; all archived response outputs ignored",
+    "input_hashes": {
+      "inputs\\BlgAttributes.txt": "b65e8e687947f78d84ef969063c5e29e1fa3eb8591961ae9a294360a05dd12f1",
+      "inputs\\config.txt": "3262ace3de552d8fd03887293dfc33802de3282ba32167501ca89bf3aa95ce95",
+      "inputs\\DensifyingConfig.txt": "5a8a5e3af410cc435d78bc037ce5a3e5465701dcd335cb3635baffc185de6c77",
+      "inputs\\Dir.txt": "c17b7594f8e881af88663f7f436ef3ea4f08e6010dd796f733a4aac749922528",
+      "inputs\\EQ_List.txt": "757a2ec29f449e35959036a6a24fbf7b3a3c06019be8b82be27f692efefbb8a0"
+    },
+    "material_formulation": "Lu-Qu ten-parameter legacy ksteel02 as identified by project owner",
+    "calibration_basis": "User-confirmed inherited calibration and new-versus-old solver agreement; scaled variants are controlled extensions of that baseline."
+  },
+  "cases": [
+    {
+      "period_ratio": 0.8,
+      "T1_s": 0.23094088539104013,
+      "pga_g": 0.1,
+      "max_PIDR_percent": 0.03437981599482079,
+      "DS_ref": 0,
+      "critical_story": 1,
+      "roof_disp_mm": 3.5393078759154837,
+      "max_PFA_g": 0.2639864424343732,
+      "material_failure": false,
+      "hdf5": "D:\\BaiduSyncdisk\\Paper\\2-SeismicTransformer\\experiment\\stage1\\data\\five_story_preview\\r0.80_pga0.1g.h5"
+    },
+    {
+      "period_ratio": 0.8,
+      "T1_s": 0.23094088539104013,
+      "pga_g": 0.35,
+      "max_PIDR_percent": 0.23330714666238853,
+      "DS_ref": 0,
+      "critical_story": 1,
+      "roof_disp_mm": 19.479580572768157,
+      "max_PFA_g": 0.6635786775058714,
+      "material_failure": false,
+      "hdf5": "D:\\BaiduSyncdisk\\Paper\\2-SeismicTransformer\\experiment\\stage1\\data\\five_story_preview\\r0.80_pga0.35g.h5"
+    },
+    {
+      "period_ratio": 0.8,
+      "T1_s": 0.23094088539104013,
+      "pga_g": 0.4,
+      "max_PIDR_percent": 0.2618959772509863,
+      "DS_ref": 0,
+      "critical_story": 1,
+      "roof_disp_mm": 22.80919653567183,
+      "max_PFA_g": 0.6797318265532406,
+      "material_failure": false,
+      "hdf5": "D:\\BaiduSyncdisk\\Paper\\2-SeismicTransformer\\experiment\\stage1\\data\\five_story_preview\\r0.80_pga0.4g.h5"
+    },
+    {
+      "period_ratio": 0.8,
+      "T1_s": 0.23094088539104013,
+      "pga_g": 0.6,
+      "max_PIDR_percent": 0.9730907149135777,
+      "DS_ref": 2,
+      "critical_story": 1,
+      "roof_disp_mm": 48.96686251035405,
+      "max_PFA_g": 1.5052035286335754,
+      "material_failure": false,
+      "hdf5": "D:\\BaiduSyncdisk\\Paper\\2-SeismicTransformer\\experiment\\stage1\\data\\five_story_preview\\r0.80_pga0.6g.h5"
+    },
+    {
+      "period_ratio": 1.0,
+      "T1_s": 0.28867610673880006,
+      "pga_g": 0.1,
+      "max_PIDR_percent": 0.061408982930702544,
+      "DS_ref": 0,
+      "critical_story": 1,
+      "roof_disp_mm": 5.96710442703183,
+      "max_PFA_g": 0.28179883400803446,
+      "material_failure": false,
+      "hdf5": "D:\\BaiduSyncdisk\\Paper\\2-SeismicTransformer\\experiment\\stage1\\data\\five_story_preview\\r1.00_pga0.1g.h5"
+    },
+    {
+      "period_ratio": 1.0,
+      "T1_s": 0.28867610673880006,
+      "pga_g": 0.35,
+      "max_PIDR_percent": 0.7469236353809077,
+      "DS_ref": 1,
+      "critical_story": 1,
+      "roof_disp_mm": 46.595843699085634,
+      "max_PFA_g": 0.67781001551239,
+      "material_failure": false,
+      "hdf5": "D:\\BaiduSyncdisk\\Paper\\2-SeismicTransformer\\experiment\\stage1\\data\\five_story_preview\\r1.00_pga0.35g.h5"
+    },
+    {
+      "period_ratio": 1.0,
+      "T1_s": 0.28867610673880006,
+      "pga_g": 0.4,
+      "max_PIDR_percent": 1.270701586147406,
+      "DS_ref": 2,
+      "critical_story": 1,
+      "roof_disp_mm": 56.69496612918647,
+      "max_PFA_g": 0.6810353345572244,
+      "material_failure": false,
+      "hdf5": "D:\\BaiduSyncdisk\\Paper\\2-SeismicTransformer\\experiment\\stage1\\data\\five_story_preview\\r1.00_pga0.4g.h5"
+    },
+    {
+      "period_ratio": 1.0,
+      "T1_s": 0.28867610673880006,
+      "pga_g": 0.6,
+      "max_PIDR_percent": 3.783314926892877,
+      "DS_ref": 3,
+      "critical_story": 1,
+      "roof_disp_mm": 147.19740335621202,
+      "max_PFA_g": 0.7768029979107479,
+      "material_failure": false,
+      "hdf5": "D:\\BaiduSyncdisk\\Paper\\2-SeismicTransformer\\experiment\\stage1\\data\\five_story_preview\\r1.00_pga0.6g.h5"
+    },
+    {
+      "period_ratio": 1.2,
+      "T1_s": 0.34641132808656083,
+      "pga_g": 0.1,
+      "max_PIDR_percent": 0.054574308272304,
+      "DS_ref": 0,
+      "critical_story": 1,
+      "roof_disp_mm": 5.684337690260505,
+      "max_PFA_g": 0.1895440445543296,
+      "material_failure": false,
+      "hdf5": "D:\\BaiduSyncdisk\\Paper\\2-SeismicTransformer\\experiment\\stage1\\data\\five_story_preview\\r1.20_pga0.1g.h5"
+    },
+    {
+      "period_ratio": 1.2,
+      "T1_s": 0.34641132808656083,
+      "pga_g": 0.35,
+      "max_PIDR_percent": 2.254982711701084,
+      "DS_ref": 3,
+      "critical_story": 1,
+      "roof_disp_mm": 96.11982478160017,
+      "max_PFA_g": 0.5256871456285337,
+      "material_failure": false,
+      "hdf5": "D:\\BaiduSyncdisk\\Paper\\2-SeismicTransformer\\experiment\\stage1\\data\\five_story_preview\\r1.20_pga0.35g.h5"
+    },
+    {
+      "period_ratio": 1.2,
+      "T1_s": 0.34641132808656083,
+      "pga_g": 0.4,
+      "max_PIDR_percent": 2.880200802216168,
+      "DS_ref": 3,
+      "critical_story": 1,
+      "roof_disp_mm": 119.37427156302996,
+      "max_PFA_g": 0.5521128917978647,
+      "material_failure": false,
+      "hdf5": "D:\\BaiduSyncdisk\\Paper\\2-SeismicTransformer\\experiment\\stage1\\data\\five_story_preview\\r1.20_pga0.4g.h5"
+    },
+    {
+      "period_ratio": 1.2,
+      "T1_s": 0.34641132808656083,
+      "pga_g": 0.6,
+      "max_PIDR_percent": 4.426500171389217,
+      "DS_ref": 3,
+      "critical_story": 1,
+      "roof_disp_mm": 186.3818069953192,
+      "max_PFA_g": 0.6895596672498121,
+      "material_failure": false,
+      "hdf5": "D:\\BaiduSyncdisk\\Paper\\2-SeismicTransformer\\experiment\\stage1\\data\\five_story_preview\\r1.20_pga0.6g.h5"
+    }
+  ]
+}

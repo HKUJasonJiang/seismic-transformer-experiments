@@ -1,0 +1,108 @@
+{
+  "source": {
+    "parameter_generator_executable": "D:\\BaiduSyncdisk\\Paper\\2-SeismicTransformer\\3-Data\\MDOF_BenchMark\\Flexural_Shear_0.1.exe",
+    "executable_sha256": "20cfdb7a79b70ab94a650023a7e95c3a145ecc842a4266fd2cac315348117e31",
+    "material_export_sha256": "a9730947874427452c2525b58a2b19224566bbbc82bd39e757c65d12c76f53a9",
+    "material_export": "D:\\BaiduSyncdisk\\Paper\\2-SeismicTransformer\\experiment\\stage1\\runs\\five_story_preview\\material_source\\Results\\matcode1.txt",
+    "mode": "matcodeinput=3: parameter export only; all archived response outputs ignored",
+    "input_hashes": {
+      "inputs\\BlgAttributes.txt": "b65e8e687947f78d84ef969063c5e29e1fa3eb8591961ae9a294360a05dd12f1",
+      "inputs\\config.txt": "3262ace3de552d8fd03887293dfc33802de3282ba32167501ca89bf3aa95ce95",
+      "inputs\\DensifyingConfig.txt": "5a8a5e3af410cc435d78bc037ce5a3e5465701dcd335cb3635baffc185de6c77",
+      "inputs\\Dir.txt": "c17b7594f8e881af88663f7f436ef3ea4f08e6010dd796f733a4aac749922528",
+      "inputs\\EQ_List.txt": "757a2ec29f449e35959036a6a24fbf7b3a3c06019be8b82be27f692efefbb8a0"
+    },
+    "material_formulation": "Lu-Qu ten-parameter legacy ksteel02 as identified by project owner",
+    "calibration_basis": "User-confirmed inherited calibration and new-versus-old solver agreement; scaled variants are controlled extensions of that baseline."
+  },
+  "parameter_names": [
+    "E0",
+    "sy0",
+    "eta",
+    "mu",
+    "gama",
+    "esoft",
+    "alpha",
+    "beta",
+    "a_k",
+    "Omega"
+  ],
+  "model": {
+    "mass": [
+      1000000.0,
+      1000000.0,
+      1000000.0,
+      1000000.0,
+      1000000.0
+    ],
+    "height": [
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0
+    ],
+    "material": [
+      [
+        5847600000.0,
+        9529500.0,
+        0.21031,
+        1000.0,
+        0.4,
+        -1e-06,
+        1.9786,
+        1.0,
+        0.4,
+        0.1
+      ],
+      [
+        5847600000.0,
+        8964100.0,
+        0.21031,
+        1000.0,
+        0.4,
+        -1e-06,
+        1.9786,
+        1.0,
+        0.4,
+        0.1
+      ],
+      [
+        5847600000.0,
+        7833300.0,
+        0.21031,
+        1000.0,
+        0.4,
+        -1e-06,
+        1.9786,
+        1.0,
+        0.4,
+        0.1
+      ],
+      [
+        5847600000.0,
+        6137000.0,
+        0.21031,
+        1000.0,
+        0.4,
+        -1e-06,
+        1.9786,
+        1.0,
+        0.4,
+        0.1
+      ],
+      [
+        5847600000.0,
+        3875300.0,
+        0.21031,
+        1000.0,
+        0.4,
+        -1e-06,
+        1.9786,
+        1.0,
+        0.4,
+        0.1
+      ]
+    ]
+  }
+}
