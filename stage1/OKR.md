@@ -2,7 +2,7 @@
 
 更新日期：2026-10-21
 
-状态：O3_SMALL_FIT_PASS / PEER10_GENERALIZATION_NOT_MET。整个 Stage 1 为 PARTIAL：24 算例单波拟合通过；3/5/8 层十波独立记录试验已完成，未通过泛化门槛；三种子复核尚未完成。
+状态：O3_SMALL_FIT_PASS / PEER10_GENERALIZATION_NOT_MET / NONLINEAR_FIT_DIAGNOSIS。整个 Stage 1 为 PARTIAL。暂停扩增数据，当前只用原 65 个 DS_ref>2 训练算例排查 A/B 并改善拟合，见 [诊断安排](DIAGNOSIS_PLAN.md)。下表中的 40 条波计划暂缓。
 
 ## 阶段目标
 
