@@ -21,6 +21,22 @@ def main():
     assert chosen['provenance']['deployable_inputs'] and chosen['arm']!='fixed_head'
     valpath=STAGE/'reports'/args.selected/'validation_result.json'
     validation=json.loads(valpath.read_text()) if valpath.exists() else None
+    by_arm={r['arm']:r for r in results.values()}
+    diagnoses=[]
+    for key,label in (('joint','原 A+B'),('free_latent','绕过 A、直接优化 latent + 原 B'),('wide_joint','原 A + 加宽 B'),('basis_joint','原 A + 空间基查询 B')):
+        if key in by_arm:
+            z=by_arm[key];a=z['summary']['all']['a_median_relative_l2']
+            diagnoses.append(f"- {label}：加速度时程相对 L2 中位数 {a:.2%}，{z['best_step']} 步，{z['provenance']['trainable_parameters']:,} 个可训练参数。")
+    conclusion=['# 诊断结论','','**3/5/8 层非线性训练拟合已通过；新地震动泛化仍需单独解决。**','',
+        '本轮对照指向原 B 的加速度重建方式是主要训练瓶颈：原 A+B 与绕过 A 后的原 B 误差接近，而保留 A、替换 B 后每类层数均通过训练门槛。加宽原 B 有改善，但同一预算内仍未通过。这个结论限于本数据、种子和优化预算，不是对原 B 理论能力的证明。','']+diagnoses+['',
+        '保留模型的 A 主干、60 点 patch 和 128 维 latent 不变。B 预测随时间变化的响应系数，用完整的楼层坐标基组合查询层响应。当前 N≤8；这些坐标基不是识别得到的真实振型，也没有采用时间 FFT/FNO。模型从正常地震动/建筑输入独立推理，不需要样本身份、真实顶层曲线或响应标签。','',
+        '训练数据仍为原 7 条波的 65 个 DS_ref>2 算例：3 层 22、5 层 22、8 层 21。每类层数两通道相对 L2 中位数≤10%、P90≤20%。没有增加数据。','',
+        f"保留模型：`{args.selected}`。完整对照、逐层误差、EDP、最差算例和时程见 [报告](README.md)。",'']
+    if validation:
+        v=validation['summary']['all']
+        conclusion += [f"冻结后的一次原验证波快照（9 个 DS>2 算例）：位移误差中位数 {v['u_median_relative_l2']:.2%}，加速度 {v['a_median_relative_l2']:.2%}，PIDR/PFA 逐层误差中位数 {v['PIDR_floor_median_relative_error']:.2%}/{v['PFA_floor_median_relative_error']:.2%}。因此只能说已经能够拟合训练中的非线性响应，不能说已经解决新波泛化。此验证结果没有再反馈到本轮模型；旧测试波未读取。",'']
+    conclusion += ['下一步保持现有数据，针对地震动到动态响应系数的映射开展泛化诊断，优先检查时间位置依赖、相位与频率响应和非线性历史信息。不要把拟合通过直接写成泛化结论；扩增数据继续暂缓。','','![训练时程](roof_examples.png)','']
+    (output/'CONCLUSION.md').write_text('\n'.join(conclusion),encoding='utf-8')
     lines=['# 3/5/8 层非线性训练拟合诊断','','所有训练对照只使用原 7 条训练波的 65 个 DS_ref>2 算例，没有生成新数据。模型/权重只按训练拟合选择。以下对照表全部为训练拟合；若存在模型冻结后的一次开发验证，单独列在末尾。旧测试波未读取。','',
            '| 运行 | 位移 L2 中位数 | 加速度 L2 中位数 | 加速度 P90 | 每类层数门槛 | 步数 | 可训练参数 |',
            '| --- | ---: | ---: | ---: | --- | ---: | ---: |']
