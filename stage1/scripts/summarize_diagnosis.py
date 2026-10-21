@@ -16,7 +16,7 @@ def main():
     import matplotlib.pyplot as plt
     output=STAGE/'reports'/'diagnosis-nonlinear-summary';output.mkdir(parents=True,exist_ok=True)
     paths=sorted((STAGE/'reports').glob('diagnosis-*/result.json'))
-    results={path.parent.name:json.loads(path.read_text()) for path in paths}
+    results={path.parent.name:json.loads(path.read_text()) for path in paths if (path.parent/'curve.json').exists()}
     chosen=results[args.selected]
     assert chosen['provenance']['deployable_inputs'] and chosen['arm']!='fixed_head'
     lines=['# 3/5/8 层非线性训练拟合诊断','','只使用原 7 条训练波的 65 个 DS_ref>2 算例。没有生成新数据，没有读取验证或测试标签。以下全部为训练拟合，不能解释成泛化。','',
