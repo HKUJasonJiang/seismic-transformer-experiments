@@ -29,5 +29,5 @@ stage1/
 - 每个训练任务使用唯一 run ID，记录 Git commit、配置、随机种子和数据清单哈希；有未提交代码时一并保存差异。
 - 只提交代码、配置、Markdown 和小型结果；不提交数据集、权重、环境或缓存。
 - 新 MDOF 工作台作为只读依赖；数据生成入口和所有新输出保存在本仓库。记录求解器版本与参数生成方式。
-- 状态只按实际结果更新；已完成[五层结构 T1/PGA 预览](stage1/reports/five_story_preview/README.md)、[patch=60 服务器核验](stage1/reports/model_check_patch60.json)，并生成覆盖 3/5/8/12 层的 24 个训练拟合算例。独立地震动测试尚未完成。
-- 24 算例联合训练已达到预设的小样本拟合门槛。完整数据、权重、逐算例指标和响应图保存在私有存储及本地 `stage1/reports/`，不提交公开仓库；整个 Stage 1 尚未完成独立测试。
+- 状态只按实际结果更新；已完成[五层结构 T1/PGA 预览](stage1/reports/five_story_preview/README.md)、[patch=60 服务器核验](stage1/reports/model_check_patch60.json)和 24 个单波训练算例的拟合。
+- 后续 [PEER-10 试验](stage1/PEER10_PLAN.md)已完成 3/5/8 层联合训练、非线性覆盖与独立记录测试：查询接口通过，预测精度未达到泛化门槛。完整数据、权重、逐算例指标和响应图保存在私有存储及本地 `stage1/reports/`；整个 Stage 1 仍为 PARTIAL。
