@@ -32,3 +32,4 @@ stage1/
 - 状态只按实际结果更新；已完成[五层结构 T1/PGA 预览](stage1/reports/five_story_preview/README.md)、[patch=60 服务器核验](stage1/reports/model_check_patch60.json)和 24 个单波训练算例的拟合。
 - 后续 [PEER-10 试验](stage1/PEER10_PLAN.md)已完成 3/5/8 层联合训练、非线性覆盖与独立记录测试：查询接口通过，预测精度未达到泛化门槛。完整数据、权重、逐算例指标和响应图保存在私有存储及本地 `stage1/reports/`；整个 Stage 1 仍为 PARTIAL。
 - [A/B 训练诊断](stage1/DIAGNOSIS_PLAN.md)使用原 65 个非线性训练样本，保留 A 并改进 B 后，3/5/8 层分别通过训练拟合门槛。冻结后的原验证波快照仍未通过泛化门槛，未据此继续调参。未扩大数据；八组对照、推理权重和时程图均已私有归档。
+- [固定 A/B、独立顶层与单波结构留出](stage1/ISOLATION_RESULT.md)已完成。训练均能拟合；未见波在顶层就失败，固定 B 的真值 latent 重建显著更好。同波留出周期配置或整组 5 层均未通过，继续暂停扩增数据。
