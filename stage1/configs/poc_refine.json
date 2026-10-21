@@ -1,0 +1,16 @@
+{
+  "run_id": "poc-fit24-patch60-refine-seed20261021",
+  "seed": 20261021,
+  "epochs": 6000,
+  "batch_size": 24,
+  "learning_rate": 0.0002,
+  "minimum_learning_rate": 0.00001,
+  "cosine_decay": true,
+  "weight_decay": 0.0,
+  "evaluate_every": 100,
+  "target_median_relative_l2": 0.1,
+  "device": "cuda:0",
+  "dataset": "data/poc_fit24/manifest.json",
+  "model_config": "configs/model.json",
+  "init_checkpoint": "runs/poc-fit24-patch60-seed20261021/best.pt"
+}

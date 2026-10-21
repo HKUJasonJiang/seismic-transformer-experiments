@@ -6,6 +6,7 @@ import argparse
 from dataclasses import asdict
 import hashlib
 import json
+import math
 import random
 import subprocess
 import time
@@ -55,6 +56,10 @@ def evaluate(model,batch):
         row["true_max_PIDR"]=float(dt.max());row["pred_max_PIDR"]=float(dp.max())
         metrics.append(row)
     summary={f"{label}_median_relative_l2":float(np.median([x[f"{label}_relative_l2"] for x in metrics])) for label in ("u","a")}
+    for label in ("u","a"):
+        values=[x[f"{label}_relative_l2"] for x in metrics]
+        summary[f"{label}_p90_relative_l2"]=float(np.quantile(values,.9))
+        summary[f"{label}_worst_relative_l2"]=float(max(values))
     summary["selection_score"]=summary["u_median_relative_l2"]+summary["a_median_relative_l2"]
     summary["PIDR_median_relative_error"]=float(np.median([x["PIDR_median_relative_error"] for x in metrics]))
     summary["PFA_median_relative_error"]=float(np.median([x["PFA_median_relative_error"] for x in metrics]))
@@ -63,10 +68,11 @@ def evaluate(model,batch):
 
 def main():
     parser=argparse.ArgumentParser()
+    parser.add_argument("--config",default="configs/poc_fit.json")
     parser.add_argument("--epochs",type=int)
     parser.add_argument("--resume",action="store_true")
     args=parser.parse_args()
-    conf=json.loads((STAGE/"configs/poc_fit.json").read_text())
+    conf=json.loads((STAGE/args.config).read_text())
     if args.epochs:conf["epochs"]=args.epochs
     seed=conf["seed"]
     random.seed(seed);np.random.seed(seed);torch.manual_seed(seed)
@@ -83,6 +89,14 @@ def main():
     batch=to_device(cpu_batch,device)
     model=SeismicQueryModel(ModelConfig(**json.loads((STAGE/conf["model_config"]).read_text()))).to(device)
     model.decoder.set_response_scales(scales.displacement_m,scales.acceleration_m_s2)
+    initialization=None
+    if conf.get("init_checkpoint"):
+        source=STAGE/conf["init_checkpoint"]
+        state=torch.load(source,map_location=device,weights_only=False)
+        model.load_state_dict(state["model"])
+        initialization={"path":conf["init_checkpoint"],"sha256":hashlib.sha256(source.read_bytes()).hexdigest(),
+                        "source_epoch":state["epoch"],"source_git_sha":state["provenance"]["git_sha"],
+                        "optimizer":"reset for refinement"}
     optimizer=torch.optim.AdamW(model.parameters(),lr=conf["learning_rate"],weight_decay=conf["weight_decay"],fused=True)
     run=STAGE/"runs"/conf["run_id"]
     report=STAGE/"reports"/conf["run_id"]
@@ -93,6 +107,7 @@ def main():
     provenance={"training":conf,"model":model.config.to_dict(),"scales":asdict(scales),"scale_info":scale_info,
                 "git_sha":git_sha,"dataset_manifest_sha256":hashlib.sha256((STAGE/conf["dataset"]).read_bytes()).hexdigest(),
                 "gpu":gpu_name,"torch":torch.__version__,"cuda":torch.version.cuda,"cases":len(dataset),
+                "initialization":initialization,
                 "scope":"Training reconstruction only, no held-out evaluation; same waveform across all 24 cases"}
     json_write(run/"provenance.json",provenance)
     best=float("inf");best_epoch=0;start_epoch=0;curve=[]
@@ -105,6 +120,9 @@ def main():
     start=time.perf_counter()
     print(json.dumps({"status":"training","gpu":gpu_name,"cases":len(dataset),"parameters":sum(p.numel() for p in model.parameters()),"run_id":conf["run_id"]}),flush=True)
     for epoch in range(start_epoch+1,conf["epochs"]+1):
+        if conf.get("cosine_decay",False):
+            lr=conf["minimum_learning_rate"]+.5*(conf["learning_rate"]-conf["minimum_learning_rate"])*(1+math.cos(math.pi*(epoch-1)/conf["epochs"]))
+            for group in optimizer.param_groups:group["lr"]=lr
         model.train();optimizer.zero_grad(set_to_none=True)
         output=model(batch["ground"],batch["attributes"],batch["structure_type"],batch["floor_ids"],batch["time_mask"])
         parts=response_loss(output,batch,scales)
@@ -113,7 +131,7 @@ def main():
         optimizer.step()
         if epoch==1 or epoch%conf["evaluate_every"]==0 or epoch==conf["epochs"]:
             summary,_,_=evaluate(model,batch)
-            row={"epoch":epoch,"loss":float(parts["total"].detach()),"wall_seconds":time.perf_counter()-start,**summary}
+            row={"epoch":epoch,"loss":float(parts["total"].detach()),"learning_rate":optimizer.param_groups[0]["lr"],"wall_seconds":time.perf_counter()-start,**summary}
             curve.append(row);json_write(run/"curve.json",curve);json_write(run/"progress.json",row)
             if summary["selection_score"]<best:
                 best=summary["selection_score"];best_epoch=epoch
