@@ -10,7 +10,7 @@ def main():
     conf=json.loads((STAGE/'configs/isolation.json').read_text());prefix=conf['prefix']
     out=STAGE/'reports'/(prefix+'-summary');out.mkdir(parents=True,exist_ok=True)
     results={p.parent.name.removeprefix(prefix+'-'):json.loads(p.read_text()) for p in (STAGE/'reports').glob(prefix+'-*/result.json')}
-    required=['reference','fixedA-roof','fixedA-full','fixedB-oracle','independent-roof','holdout-period-roof','holdout-period-full','holdout-stories-roof','holdout-stories-full','holdout-period-interpolation']
+    required=['reference','fixedA-roof','fixedA-full','fixedB-oracle','fixedB-norm-oracle','independent-roof','holdout-period-roof','holdout-period-full','holdout-stories-roof','holdout-stories-full','holdout-period-interpolation']
     assert all(k in results for k in required),set(required)-set(results)
     samples={};entries={}
     for split in ('train','validation'):
@@ -28,7 +28,8 @@ def main():
         return r[('u' if key=='displacement' else 'a')+'_roof_relative_l2']
     colors={'reference':'#246ca6','fixedA-roof':'#349b68','fixedA-full':'#349b68','independent-roof':'#9c4ba4','fixedB-oracle':'#d67920',
             'holdout-period-full':'#246ca6','holdout-period-roof':'#9c4ba4','holdout-stories-full':'#246ca6','holdout-stories-roof':'#9c4ba4','holdout-period-interpolation':'#349b68'}
-    names={'reference':'Current A+B','fixedA-roof':'Frozen A + new roof head','fixedA-full':'Frozen A + new all-floor head','independent-roof':'Independent roof predictor','fixedB-oracle':'Frozen B + optimized Z (ORACLE)',
+    colors['fixedB-norm-oracle']='#d67920'
+    names={'reference':'Current A+B','fixedA-roof':'Frozen A + new roof head','fixedA-full':'Frozen A + new all-floor head','independent-roof':'Independent roof predictor','fixedB-oracle':'Frozen B + optimized Z (ORACLE)', 'fixedB-norm-oracle':'Frozen B + normalized Z (ORACLE)',
            'holdout-period-full':'Fresh A+B','holdout-period-roof':'Fresh roof predictor','holdout-stories-full':'Fresh A+B','holdout-stories-roof':'Fresh roof predictor','holdout-period-interpolation':'Training-response interpolation'}
     plt.rcParams.update({'font.size':9,'axes.grid':True,'grid.alpha':.2})
     def meta(case):
@@ -43,7 +44,7 @@ def main():
     # Choose 5F ratio 1.0 by metadata, not by prediction quality.
     choices=[r for r in results['reference']['splits']['held']['cases'] if r['stories']==5]
     case=min(choices,key=lambda r:abs(r['period_ratio']-1.))['id']
-    methods=['reference','fixedA-roof','fixedA-full','independent-roof','fixedB-oracle']
+    methods=['reference','fixedA-roof','fixedA-full','independent-roof','fixedB-norm-oracle']
     fig,axs=plt.subplots(len(methods),2,figsize=(13,10.5),sharex=True,constrained_layout=True)
     for i,m in enumerate(methods):
         for col,key in enumerate(('displacement','acceleration')):
@@ -61,7 +62,7 @@ def main():
         axs[0,0].legend(fontsize=7,ncol=2)
         for ax in axs[-1]:ax.set_xlabel('Time (s)')
         fig.suptitle(title+'\n'+meta(case),fontsize=11);fig.savefig(out/filename,dpi=150);plt.close(fig)
-    floors(case,['reference','fixedA-full','fixedB-oracle'],'held','UNSEEN DEVELOPMENT RECORD: EVERY FLOOR\nOrange = truth-assisted reconstruction; blue/green = ordinary predictions','multiwave_all_floors.png')
+    floors(case,['reference','fixedA-full','fixedB-norm-oracle'],'held','UNSEEN DEVELOPMENT RECORD: EVERY FLOOR\nOrange = truth-assisted reconstruction; blue/green = ordinary predictions','multiwave_all_floors.png')
     selected={ 'multiwave':case }
     for fold in ('period','stories'):
         full='holdout-'+fold+'-full';roof_method='holdout-'+fold+'-roof';methods=[full,roof_method]
@@ -124,7 +125,7 @@ def main():
         lines.append(f'- [{m} 指标及来源](../{prefix}-{m}/result.json)；[全部留出顶层图](../{prefix}-{m}/held_roof.png)')
         for r in results[m]['splits']['held']['cases']:lines.append(f"  - [{r['id']}](../{prefix}-{m}/held/{r['id']}.png)")
     (out/'RESULTS.md').write_text('\n'.join(lines)+'\n',encoding='utf-8')
-    print(json.dumps({'summary':str(out),'selected_cases':selected,'groups':summary},ensure_ascii=True),flush=True)
+    print(json.dumps({'summary':str(out),'selected_cases':selected,'groups':{m:{s:brief(v,r['provenance'].get('roof_only',False)) for s,v in summary[m]['splits'].items()} for m,r in results.items()}},ensure_ascii=True),flush=True)
 
 
 if __name__=='__main__':main()

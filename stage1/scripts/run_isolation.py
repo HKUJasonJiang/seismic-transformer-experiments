@@ -34,8 +34,8 @@ def frozen_a(conf,config,source,train,held,entries,prov):
         json_write(STAGE/'reports'/name/'result.json',result)
 
 
-def fixed_b(conf,source,train,held,entries,prov):
-    name=conf['prefix']+'-fixedB-oracle';run=STAGE/'runs'/name;report=STAGE/'reports'/name
+def fixed_b(conf,source,train,held,entries,prov,constrained=False):
+    name=conf['prefix']+('-fixedB-norm-oracle' if constrained else '-fixedB-oracle');run=STAGE/'runs'/name;report=STAGE/'reports'/name
     if (report/'result.json').exists():return
     run.mkdir(parents=True,exist_ok=True);report.mkdir(parents=True,exist_ok=True)
     before=state_hash(source);train=cache_encoder(source,train);held=cache_encoder(source,held)
@@ -47,20 +47,26 @@ def fixed_b(conf,source,train,held,entries,prov):
     starts=[];t0=time.perf_counter()
     for start in range(3):
         label=('A_output','random_1','random_2')[start];seed_all(conf['seed']+start)
-        z=nn.Parameter(actual.clone() if start==0 else mean+std*torch.randn_like(actual))
+        initial=actual.clone() if start==0 else mean+std*torch.randn_like(actual)
+        norm=source.encoder.output_norm
+        if constrained:
+            assert norm.weight.abs().min()>1e-6
+            initial=(initial-norm.bias)/norm.weight
+        z=nn.Parameter(initial)
+        def latent():return norm(z) if constrained else z
         opt=torch.optim.Adam([z],lr=conf['oracle_learning_rate']);curve=[]
-        local_loss=torch.full_like(best_loss,float('inf'));local_z=z.detach().clone()
+        local_loss=torch.full_like(best_loss,float('inf'));local_z=latent().detach().clone()
         for step in range(conf['oracle_steps']+1):
             if step:
                 lr=conf['oracle_minimum_learning_rate']+.5*(conf['oracle_learning_rate']-conf['oracle_minimum_learning_rate'])*(1+math.cos(math.pi*step/conf['oracle_steps']))
                 opt.param_groups[0]['lr']=lr;opt.zero_grad(set_to_none=True)
-                loss=loss_vector(decode(source,z,b),b,scales,False).mean()
+                loss=loss_vector(decode(source,latent(),b),b,scales,False).mean()
                 if not torch.isfinite(loss):raise RuntimeError('Oracle loss nonfinite')
                 loss.backward();opt.step()
             if step%conf['evaluate_every']==0 or step==conf['oracle_steps']:
                 with torch.no_grad():
-                    pred=decode(source,z,b);lv=loss_vector(pred,b,scales,False)
-                    mask=lv<local_loss;local_loss=torch.minimum(local_loss,lv);local_z[mask]=z.detach()[mask]
+                    zz=latent();pred=decode(source,zz,b);lv=loss_vector(pred,b,scales,False)
+                    mask=lv<local_loss;local_loss=torch.minimum(local_loss,lv);local_z[mask]=zz.detach()[mask]
                     _,s=metrics(pred,b,entries,False)
                 row={'step':step,'summary':s,'seconds':time.perf_counter()-t0};curve.append(row)
                 json_write(run/'progress.json',dict(start=label,**row))
@@ -82,6 +88,7 @@ def fixed_b(conf,source,train,held,entries,prov):
     oracle_prov=dict(prov,intervention='Frozen B; optimize only per-case Z using that case response truth',roof_only=False,
                      warning='ORACLE RECONSTRUCTION; NOT PREDICTION OR GENERALIZATION',frozen_before=before,frozen_after=state_hash(source),
                      frozen_module_check='PASS',selection='Per-case best u+a+drift loss across checkpoints and three initializations',
+                     latent_constraint='Frozen original A output LayerNorm applied to optimized pre-normalization tokens' if constrained else 'Unconstrained Z; same dimensions but not necessarily in the encoder output range',
                      config=conf,scales=asdict(scales),seconds=time.perf_counter()-t0)
     result=output(name,predictions,{'train':train,'held':held},entries,oracle_prov,oracle=True)
     result.update(starts=starts,latent_changes=detail);json_write(report/'result.json',result)
@@ -127,7 +134,7 @@ def structural_holdout(conf,config,all_train,entries,prov):
 
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--group',choices=['all','fixed_a','fixed_b','roof','holdout'],default='all');args=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--group',choices=['all','fixed_a','fixed_b','fixed_b_norm','roof','holdout'],default='all');args=p.parse_args()
     conf=json.loads((STAGE/'configs/isolation.json').read_text());config=ModelConfig(**json.loads((STAGE/conf['model_config']).read_text()))
     torch.set_num_threads(4);torch.set_num_interop_threads(2)
     assert torch.cuda.is_available() and '5090' in torch.cuda.get_device_name()
@@ -158,6 +165,7 @@ def main():
         torch.backends.cuda.matmul.allow_tf32=True
     if args.group in ('all','fixed_a'):frozen_a(conf,config,source,train,held,entries,prov)
     if args.group in ('all','fixed_b'):fixed_b(conf,source,train,held,entries,prov)
+    if args.group in ('all','fixed_b_norm'):fixed_b(conf,source,train,held,entries,prov,constrained=True)
     if args.group in ('all','roof'):fresh_run(conf['prefix']+'-independent-roof',conf,config,train,held,entries,prov,True)
     if args.group=='all':structural_holdout(conf,config,all_train,entries,{k:v for k,v in prov.items() if k not in ('source_checkpoint','source_sha256','train_case_ids','held_case_ids','held_role')})
 
