@@ -8,6 +8,8 @@
 
 [当前模型设计](stage1/MODEL_DESIGN.md)：FiLM 时序编码器 + 共享楼层查询解码器，联合输出逐层位移与绝对加速度。
 
+[远程执行约定](stage1/REMOTE_EXECUTION.md)：本地设计和编辑；所有仿真、预处理、测试、训练和评估在 5090 执行。代码计划同步 GitHub，数据和权重计划保存 HF。
+
 ## 目录
 
 ```text
@@ -27,4 +29,4 @@ stage1/
 - 每个训练任务使用唯一 run ID，记录 Git commit、配置、随机种子和数据清单哈希；有未提交代码时一并保存差异。
 - 只提交代码、配置、Markdown 和小型结果；不提交数据集、权重、环境或缓存。
 - 新 MDOF 工作台作为只读依赖；数据生成入口和所有新输出保存在本仓库。记录求解器版本与参数生成方式。
-- 状态只按实际结果更新；当前已完成[五层结构 T1/PGA 预览](stage1/reports/five_story_preview/README.md)和 O2 核心模型接口/反向检查，尚未生成完整 POC 数据集或启动训练。
+- 状态只按实际结果更新；已完成[五层结构 T1/PGA 预览](stage1/reports/five_story_preview/README.md)和历史 patch=10 模型检查。当前 patch=60 配置待服务器验证，完整 POC 数据集和训练尚未完成。

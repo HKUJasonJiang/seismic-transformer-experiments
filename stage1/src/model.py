@@ -17,7 +17,7 @@ from torch.nn import functional as F
 @dataclass(frozen=True)
 class ModelConfig:
     sample_rate_hz: float = 50.0
-    patch_size: int = 10
+    patch_size: int = 60
     d_model: int = 128
     n_heads: int = 4
     n_layers: int = 4

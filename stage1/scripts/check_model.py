@@ -204,6 +204,7 @@ if __name__ == "__main__":
         raise SystemExit(1)
     report = {"checks_run":result.testsRun,"failures":len(result.failures),"errors":len(result.errors),
               "production_shape_check":real_shape_check(),"real_data_check":real_data_check()}
-    destination = STAGE/"reports/model_check.json"
+    patch_size = report["production_shape_check"]["config"]["patch_size"]
+    destination = STAGE/"reports"/f"model_check_patch{patch_size}.json"
     destination.write_text(json.dumps(report,indent=2)+"\n",encoding="utf-8")
     print(json.dumps(report,indent=2))
