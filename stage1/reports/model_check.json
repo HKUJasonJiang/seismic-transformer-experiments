@@ -1,0 +1,142 @@
+{
+  "checks_run": 6,
+  "failures": 0,
+  "errors": 0,
+  "production_shape_check": {
+    "input_shape": [
+      2,
+      3751,
+      1
+    ],
+    "latent_shape": [
+      2,
+      376,
+      128
+    ],
+    "displacement_shape": [
+      2,
+      3751,
+      5
+    ],
+    "acceleration_shape": [
+      2,
+      3751,
+      5
+    ],
+    "parameter_count": 1097492,
+    "device": "cpu",
+    "torch_version": "2.13.0+cu130",
+    "config": {
+      "sample_rate_hz": 50.0,
+      "patch_size": 10,
+      "d_model": 128,
+      "n_heads": 4,
+      "n_layers": 4,
+      "ff_multiplier": 4,
+      "dropout": 0.0,
+      "num_structure_types": 4
+    },
+    "finite_backward": true,
+    "input_description": "Synthetic zero waveform; actual preview waveform check recorded separately if available",
+    "training_status": "No training campaign or optimizer update; forward/backward interface check only"
+  },
+  "real_data_check": {
+    "status": "PASS",
+    "case_ids": [
+      "r0.80_pga0.1g",
+      "r1.00_pga0.35g",
+      "r1.20_pga0.6g"
+    ],
+    "ground_shape": [
+      3,
+      3751,
+      1
+    ],
+    "latent_shape": [
+      3,
+      376,
+      128
+    ],
+    "response_shape": [
+      3,
+      3751,
+      5
+    ],
+    "untrained_loss_parts": {
+      "displacement": 1.0045033693313599,
+      "acceleration": 1.0065768957138062,
+      "drift": 1.0065903663635254,
+      "total": 3.0176706314086914
+    },
+    "response_scales": {
+      "displacement_m": 0.011543814355270602,
+      "acceleration_m_s2": 0.5935469142032007,
+      "drift_ratio": 0.0013700363419573084
+    },
+    "scale_provenance": {
+      "fit_source": "O2-smoke-input-only; not a frozen training split",
+      "method": "per-building equal-weight RMS; no mean removal",
+      "buildings_seen": 3,
+      "minimum_scales": [
+        1e-06,
+        0.0001,
+        1e-07
+      ]
+    },
+    "module_gradients": {
+      "structure_encoder": {
+        "finite": true,
+        "gradient_L1": 1.6430260930210352
+      },
+      "encoder": {
+        "finite": true,
+        "gradient_L1": 73.74539091158658
+      },
+      "decoder": {
+        "finite": true,
+        "gradient_L1": 50.47022272553295
+      }
+    },
+    "derived_indicator_shapes": {
+      "drift": [
+        3,
+        3751,
+        5
+      ],
+      "PIDR": [
+        3,
+        5
+      ],
+      "PFA": [
+        3,
+        5
+      ],
+      "maximum_PIDR": [
+        3
+      ],
+      "maximum_PFA": [
+        3
+      ],
+      "critical_story": [
+        3
+      ],
+      "DS_ref_by_floor": [
+        3,
+        5
+      ],
+      "DS_ref_building": [
+        3
+      ],
+      "roof_displacement": [
+        3,
+        3751
+      ],
+      "roof_acceleration": [
+        3,
+        3751
+      ]
+    },
+    "input_npz_sha256": "e53be3ca4e968e241eac4324f415f2b230e6c67b05f758fd1358e6bc2a3f2b9a",
+    "performance_claim": "None; random initial weights, no optimizer step or training campaign"
+  }
+}

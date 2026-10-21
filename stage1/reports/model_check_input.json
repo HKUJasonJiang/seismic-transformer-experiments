@@ -1,0 +1,41 @@
+{
+  "purpose": "O2 real-data forward/backward only; not a generalization experiment",
+  "sample_rate_hz": 50,
+  "ground_shape": [
+    3,
+    3751,
+    1
+  ],
+  "response_shape": [
+    3,
+    3751,
+    5
+  ],
+  "cases": [
+    {
+      "case_id": "r0.80_pga0.1g",
+      "source": "D:\\BaiduSyncdisk\\Paper\\2-SeismicTransformer\\experiment\\stage1\\data\\five_story_preview\\r0.80_pga0.1g.h5",
+      "source_config_hash": "3450a71f58cf0ac467d24b58e62abaf22d64e90e64342566f90508db6549ce72",
+      "source_integration_dt": 0.00025,
+      "source_peaks": "Integration-grid peak labels excluded from waveform loss",
+      "response_processing": "Legacy displacement reindexed, then scipy resample_poly anti-aliasing to 50 Hz"
+    },
+    {
+      "case_id": "r1.00_pga0.35g",
+      "source": "D:\\BaiduSyncdisk\\Paper\\2-SeismicTransformer\\experiment\\stage1\\data\\five_story_preview\\r1.00_pga0.35g.h5",
+      "source_config_hash": "e78daf8c61696c37f53cfe7e189f8d15d24955bcb11f7bee18dd985c6b0d3a6d",
+      "source_integration_dt": 0.00025,
+      "source_peaks": "Integration-grid peak labels excluded from waveform loss",
+      "response_processing": "Legacy displacement reindexed, then scipy resample_poly anti-aliasing to 50 Hz"
+    },
+    {
+      "case_id": "r1.20_pga0.6g",
+      "source": "D:\\BaiduSyncdisk\\Paper\\2-SeismicTransformer\\experiment\\stage1\\data\\five_story_preview\\r1.20_pga0.6g.h5",
+      "source_config_hash": "6c2dee58971091cf0a412dc7b55c955e83b94e35fd5604741aa46cd305427013",
+      "source_integration_dt": 0.00025,
+      "source_peaks": "Integration-grid peak labels excluded from waveform loss",
+      "response_processing": "Legacy displacement reindexed, then scipy resample_poly anti-aliasing to 50 Hz"
+    }
+  ],
+  "npz_sha256": "e53be3ca4e968e241eac4324f415f2b230e6c67b05f758fd1358e6bc2a3f2b9a"
+}
