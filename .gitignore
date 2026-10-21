@@ -22,6 +22,11 @@ venv/
 *.ckpt
 *.log
 
+# Full new fit reports stay in private HF storage and local report copies.
+stage1/reports/poc-fit24-*/
+stage1/reports/poc_fit24_*.json
+stage1/reports/poc_result.md
+
 # Local settings and secrets
 .env
 .env.*

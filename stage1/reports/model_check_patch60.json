@@ -1,0 +1,47 @@
+{
+  "checks_run": 7,
+  "failures": 0,
+  "errors": 0,
+  "production_shape_check": {
+    "input_shape": [
+      2,
+      3751,
+      1
+    ],
+    "latent_shape": [
+      2,
+      63,
+      128
+    ],
+    "displacement_shape": [
+      2,
+      3751,
+      5
+    ],
+    "acceleration_shape": [
+      2,
+      3751,
+      5
+    ],
+    "parameter_count": 1116792,
+    "device": "cpu",
+    "torch_version": "2.9.0+cu128",
+    "config": {
+      "sample_rate_hz": 50.0,
+      "patch_size": 60,
+      "d_model": 128,
+      "n_heads": 4,
+      "n_layers": 4,
+      "ff_multiplier": 4,
+      "dropout": 0.0,
+      "num_structure_types": 4
+    },
+    "finite_backward": true,
+    "input_description": "Synthetic zero waveform; actual preview waveform check recorded separately if available",
+    "training_status": "No training campaign or optimizer update; forward/backward interface check only"
+  },
+  "real_data_check": {
+    "status": "NOT_RUN",
+    "reason": "Run prepare_model_check_input.py first"
+  }
+}

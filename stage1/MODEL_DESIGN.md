@@ -76,7 +76,7 @@ DS_ref 使用显式漂移阈值，不设独立分类头。查询局部楼层时�
 
 - 使用最小 FiLM Transformer 基线，暂不增加 FNO/FFT 分支、模态标签或额外全局指标预测头。
 - patch 化将时间 token 数减少约 60 倍；latent 仍保留完整时间次序，片内信息由 60→128 投影编码。
-- 当前 dropout=0；patch=60 的实际参数量与接口结果由服务器检查记录。历史 patch=10 版为 1,097,492 个参数。
+- 当前 dropout=0；patch=60 在服务器核验为 1,116,792 个参数。历史 patch=10 版为 1,097,492 个参数。
 - 完整地震动编码不是在线因果预测；先研究给定完整波形的快速全楼响应。
 
 ## 已完成检查（历史 patch=10 配置）
@@ -104,4 +104,10 @@ python stage1/scripts/prepare_model_check_input.py
 python stage1/scripts/check_model.py
 ```
 
-准备输入需要 numpy/scipy/h5py，模型检查需要 PyTorch/numpy。当前新配置尚未在服务器执行。连接、同步和认证约定见 [REMOTE_EXECUTION.md](REMOTE_EXECUTION.md)。
+准备历史预览输入需要 numpy/scipy/h5py，模型检查需要 PyTorch/numpy。patch=60 已在服务器通过 7 项检查及正式尺寸前向/反向；实际 24 算例已用于联合训练，历史预览输入文件未额外复制到服务器，检查报告中的可选历史输入项显示 NOT_RUN。见 [服务器核验](reports/model_check_patch60.json)和 [REMOTE_EXECUTION.md](REMOTE_EXECUTION.md)。
+
+## 小样本拟合的损失诊断
+
+首轮使用上述全训练集 RMS 尺度。低 PGA、小位移算例的相对误差较大，因此另外建立 `poc_balanced.json` 实验：每个通道的逐算例 MSE 除以该训练算例真值的均方，再对算例等权平均。分母下限为全训练集 RMS 的 1% 的平方，避免近零响应权重无界。
+
+这些尺度只用于训练损失；模型输入与输出的物理单位不变，推理时不需要响应真值。原始损失和精调结果保留，各实验使用独立 run ID。
