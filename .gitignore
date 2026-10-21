@@ -31,6 +31,12 @@ stage1/reports/peer10-*/
 stage1/reports/peer10_*.json
 stage1/reports/diagnosis-*/
 
+# Per-idea code/config/Markdown are public; full figures and results are private.
+exp/*/figures/*
+!exp/*/figures/README.md
+exp/*/results/*
+!exp/*/results/README.md
+
 # Local settings and secrets
 .env
 .env.*

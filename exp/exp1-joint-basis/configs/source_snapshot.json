@@ -1,0 +1,66 @@
+{
+  "source_commit": "15456301dbc9ded759990f573684b47667d2cc4d",
+  "description": "Frozen source snapshot; historical runtime commits remain in original provenance",
+  "files": [
+    {
+      "file": "codes/scripts/check_spatial_basis.py",
+      "sha256": "457614a17c2f8a3bfe8bdc25e4cae2e685a8e371ea098388685682249c7b208e"
+    },
+    {
+      "file": "codes/scripts/diagnose_nonlinear.py",
+      "sha256": "0d6358db81461ef5dffa0756d6c71d7e95a3ffc3488d36958d3cb3b72b1f1353"
+    },
+    {
+      "file": "codes/scripts/diagnosis_residuals.py",
+      "sha256": "c474de93b2e0556b327d72a5ca6877618240832bd9b48ee033ec56c1a6366946"
+    },
+    {
+      "file": "codes/scripts/export_nonlinear.py",
+      "sha256": "43d5fe1f37323342e55d941c982763e45321503953a24ed9468dfe5308a1db61"
+    },
+    {
+      "file": "codes/scripts/peer10_common.py",
+      "sha256": "2640b319aee4062672e12349ad1973717bf9c9af92782a8aba31e262dd2c1b56"
+    },
+    {
+      "file": "codes/scripts/summarize_diagnosis.py",
+      "sha256": "67c2847060add00e0c75e4a04eaa56fc55f72ae1afeeea685280867b69696eaa"
+    },
+    {
+      "file": "codes/scripts/train_poc.py",
+      "sha256": "802aee8a2798d1c581460c1d761ccfa2bcce51ed2456b5707da9fbfeecb353df"
+    },
+    {
+      "file": "codes/scripts/validate_diagnosis.py",
+      "sha256": "0bd6737559395bd2c25e40a9a6406ed93b950abbbd144ee2aa5501b3769b829a"
+    },
+    {
+      "file": "codes/src/__init__.py",
+      "sha256": "0c5782544ecc4792f62d02fc270f8dd8315d427067916d94f80b02bd7205b47e"
+    },
+    {
+      "file": "codes/src/basis_decoder.py",
+      "sha256": "18e0d1e413252482495518c8860d11bfb519cee5377b85131c98b76370c5bb4a"
+    },
+    {
+      "file": "codes/src/dataset.py",
+      "sha256": "e5980a29c96145be6217ca1dd533b67e11a4818abbf2edb2550e3de430ceb8f2"
+    },
+    {
+      "file": "codes/src/losses.py",
+      "sha256": "486ee761b485f02ab6e2f4158048decef7161107bdea5cc82c37a4525ef72f86"
+    },
+    {
+      "file": "codes/src/metrics.py",
+      "sha256": "d77483c685111635f46d4729e135d341a85e38119d1d79eb9f5f049793f396c4"
+    },
+    {
+      "file": "codes/src/model.py",
+      "sha256": "501a98a4211579f36268a8b5697fc5418040a6b6f9755cbd3ae97a3e7c8c8e7d"
+    },
+    {
+      "file": "codes/src/nonlinear_inference.py",
+      "sha256": "9a325bdfc841d1cbb32d269ed1c45e828733dbba246529f29079a29fd8f4064b"
+    }
+  ]
+}

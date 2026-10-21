@@ -1,0 +1,15 @@
+{
+  "run_id": "diagnosis-nonlinear-v1",
+  "dataset": "data/peer10_nonlinear_v1",
+  "model_config": "configs/model.json",
+  "source_checkpoint": "runs/peer10-358-patch60-seed20261021/best.pt",
+  "seed": 20261022,
+  "device": "cuda:0",
+  "steps": 6000,
+  "evaluate_every": 250,
+  "learning_rate": 0.001,
+  "minimum_learning_rate": 0.00003,
+  "batch_size": 65,
+  "weight_decay": 0.00001,
+  "arms": ["free_latent", "frozen_A", "fixed_head", "joint"]
+}

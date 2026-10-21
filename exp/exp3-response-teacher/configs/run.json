@@ -1,0 +1,24 @@
+{
+  "version": "exp3-response-teacher-v1",
+  "seed": 20261024,
+  "device": "cuda:0",
+  "dataset": "stage1/data/peer10_nonlinear_v1",
+  "normalization": "per_case",
+  "response_weights": [1.0, 1.0, 1.0],
+  "latent_weight": 1.0,
+  "latent_std_floor": 0.1,
+  "learning_rate": 0.001,
+  "minimum_learning_rate": 0.00003,
+  "weight_decay": 0.00001,
+  "evaluate_every": 400,
+  "max_grad_norm": 1.0,
+  "max_floors": 8,
+  "teacher_hidden": [512, 256],
+  "protocols": {
+    "multiwave": {"teacher_steps": 6000, "student_steps": 8000},
+    "period": {"teacher_steps": 4000, "student_steps": 6000},
+    "stories": {"teacher_steps": 4000, "student_steps": 6000}
+  },
+  "single_record": "peer_1",
+  "shared_pga_g": [0.1, 0.35, 0.6]
+}

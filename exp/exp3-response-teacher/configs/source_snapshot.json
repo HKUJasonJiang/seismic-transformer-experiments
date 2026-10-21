@@ -1,0 +1,34 @@
+{
+  "source_commit": "15456301dbc9ded759990f573684b47667d2cc4d",
+  "description": "Frozen source snapshot; historical runtime commits remain in original provenance",
+  "files": [
+    {
+      "file": "codes/src/__init__.py",
+      "sha256": "0c5782544ecc4792f62d02fc270f8dd8315d427067916d94f80b02bd7205b47e"
+    },
+    {
+      "file": "codes/src/basis_decoder.py",
+      "sha256": "18e0d1e413252482495518c8860d11bfb519cee5377b85131c98b76370c5bb4a"
+    },
+    {
+      "file": "codes/src/dataset.py",
+      "sha256": "e5980a29c96145be6217ca1dd533b67e11a4818abbf2edb2550e3de430ceb8f2"
+    },
+    {
+      "file": "codes/src/losses.py",
+      "sha256": "486ee761b485f02ab6e2f4158048decef7161107bdea5cc82c37a4525ef72f86"
+    },
+    {
+      "file": "codes/src/metrics.py",
+      "sha256": "d77483c685111635f46d4729e135d341a85e38119d1d79eb9f5f049793f396c4"
+    },
+    {
+      "file": "codes/src/model.py",
+      "sha256": "501a98a4211579f36268a8b5697fc5418040a6b6f9755cbd3ae97a3e7c8c8e7d"
+    },
+    {
+      "file": "codes/src/nonlinear_inference.py",
+      "sha256": "9a325bdfc841d1cbb32d269ed1c45e828733dbba246529f29079a29fd8f4064b"
+    }
+  ]
+}

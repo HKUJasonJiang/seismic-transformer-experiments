@@ -1,0 +1,18 @@
+{
+  "prefix": "diagnosis-isolation-v1",
+  "dataset": "data/peer10_nonlinear_v1",
+  "source_checkpoint": "runs/diagnosis-nonlinear-v1-basis_joint/inference.pt",
+  "model_config": "configs/model.json",
+  "seed": 20261023,
+  "device": "cuda:0",
+  "steps": 8000,
+  "oracle_steps": 4000,
+  "evaluate_every": 400,
+  "learning_rate": 0.001,
+  "minimum_learning_rate": 0.00003,
+  "weight_decay": 0.00001,
+  "oracle_learning_rate": 0.01,
+  "oracle_minimum_learning_rate": 0.0005,
+  "single_record": "peer_1",
+  "shared_pga_g": [0.1, 0.35, 0.6]
+}
