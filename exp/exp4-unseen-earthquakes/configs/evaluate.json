@@ -1,0 +1,18 @@
+{
+  "version": "exp4-unseen-earthquakes-v1",
+  "dataset": "stage1/data/peer10_nonlinear_v1",
+  "checkpoint": "exp/exp3-response-teacher/runs/multiwave-joint-matchedTotal/best.pt",
+  "checkpoint_sha256": "6549d008efad0c64097d0883126e33ffa2650d098e4df368860c64bcee08a28d",
+  "selection": "Fixed before exp4 test inference: existing A+B 14000 updates, best training objective; no C, no teacher, no new training",
+  "training_records": ["peer_1", "peer_2", "peer_3", "peer_4", "peer_5", "peer_6", "peer_7"],
+  "test_records": ["peer_9", "peer_10"],
+  "primary_subset": "DS_ref > 2",
+  "secondary_subset": "all valid test cases, including DS_ref <= 2 outside the training damage subset",
+  "representative_rule": "For each test record and story count choose highest-PGA valid case at period_ratio=1.0, without inspecting prediction errors",
+  "damage_thresholds_strict_gt": [0.005, 0.008, 0.02, 0.05],
+  "seed": 20261024,
+  "device": "cuda:0",
+  "max_floors": 8,
+  "batch_size": 8,
+  "acceptance": "No numerical engineering acceptance threshold has been agreed; report MSE, complete curves and peak/damage errors without declaring an automatic pass"
+}
