@@ -15,6 +15,7 @@ def main():
     p=argparse.ArgumentParser()
     p.add_argument("--login-stdin",action="store_true")
     p.add_argument("--data",action="store_true")
+    p.add_argument("--data-subdir",type=str)
     p.add_argument("--run",type=str)
     p.add_argument("--summary",action="store_true")
     args=p.parse_args()
@@ -30,9 +31,12 @@ def main():
     # User authorized public GitHub code, while simulation data stays private.
     if not info.private:api.update_repo_settings(repo,repo_type="dataset",private=True)
     print(json.dumps({"account":who["name"],"private":True}),flush=True)
-    if args.data:
-        result=api.upload_folder(repo_id=repo,repo_type="dataset",folder_path=STAGE/"data/poc_fit24",path_in_repo="stage1/poc_fit24",
-                                 commit_message="Add C++ small-sample learnability dataset")
+    if args.data or args.data_subdir:
+        name=args.data_subdir or "poc_fit24"
+        folder=(STAGE/"data"/name).resolve()
+        if not folder.is_relative_to((STAGE/"data").resolve()):raise ValueError("Data directory escapes stage1/data")
+        result=api.upload_folder(repo_id=repo,repo_type="dataset",folder_path=folder,path_in_repo="stage1/"+name,
+                                 commit_message="Archive C++ response dataset and record splits")
         print(json.dumps({"dataset_commit":result.oid}),flush=True)
     if args.run:
         result=api.upload_folder(repo_id=repo,repo_type="dataset",folder_path=STAGE/"runs"/args.run,path_in_repo="artifacts/"+args.run,

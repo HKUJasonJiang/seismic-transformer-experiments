@@ -27,6 +27,8 @@ stage1/reports/poc-fit24-*/
 stage1/reports/poc_fit24_*.json
 stage1/reports/poc_result.md
 stage1/reports/runtime_deployment.json
+stage1/reports/peer10-*/
+stage1/reports/peer10_*.json
 
 # Local settings and secrets
 .env
