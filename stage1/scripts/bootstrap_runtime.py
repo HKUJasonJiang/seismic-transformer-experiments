@@ -30,7 +30,8 @@ def main():
         z.extractall(root)
     info={"runtime_archive_sha256":actual,"destination":str(root),
           "dataset_revision":HfApi().repo_info(repo,repo_type="dataset").sha}
-    output=root/"experiment/stage1/reports/runtime_deployment.json"
+    output=root/"experiment/stage1/runs/deploy/runtime_deployment.json"
+    output.parent.mkdir(parents=True,exist_ok=True)
     output.write_text(json.dumps(info,indent=2)+"\n",encoding="utf-8")
     print(json.dumps(info),flush=True)
 

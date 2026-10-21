@@ -26,6 +26,7 @@ venv/
 stage1/reports/poc-fit24-*/
 stage1/reports/poc_fit24_*.json
 stage1/reports/poc_result.md
+stage1/reports/runtime_deployment.json
 
 # Local settings and secrets
 .env
