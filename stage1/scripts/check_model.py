@@ -88,7 +88,9 @@ class ModelChecks(unittest.TestCase):
             altered[3] = x[3][:, [2, 0]]
             subset = self.model(*altered)
             for key in ("displacement", "acceleration"):
-                torch.testing.assert_close(full[key][..., [2,0]], subset[key], atol=1e-7, rtol=1e-6)
+                # Query count changes float32 GEMM paths; tolerances are in SI units.
+                atol = 1e-8 if key == "displacement" else 1e-5
+                torch.testing.assert_close(full[key][..., [2,0]], subset[key], atol=atol, rtol=1e-5)
         with self.assertRaises(ValueError):
             response_indicators(subset, torch.full((3,2),3.), altered[3])
 

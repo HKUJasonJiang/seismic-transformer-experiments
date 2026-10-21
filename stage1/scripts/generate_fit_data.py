@@ -34,6 +34,7 @@ def main():
                     print(json.dumps({"id":name,"status":"reused"}),flush=True)
                     continue
                 c=case_config(config,material,gm,ratio,pga,source)
+                c["name"]=name
                 # All legacy compatibility semantics remain explicit in source metadata.
                 result=run_case(c)
                 failure=bool(result.material_dead.any())
