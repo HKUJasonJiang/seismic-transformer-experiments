@@ -1,0 +1,60 @@
+{
+  "version": "exp7-cross-attention-decoder-v1",
+  "device": "cuda:0",
+  "dataset": "stage1/data/peer10_nonlinear_v1",
+  "dataset_format": "peer10_npz",
+  "seeds": [20261024, 20261025, 20261026],
+  "intensity_vocabulary": [6, 7, 8, 9],
+  "structure_features": [
+    {"name": "stories", "transform": "linear", "scale": 10.0},
+    {"name": "T1_s", "transform": "linear", "scale": 1.0}
+  ],
+  "model_preset": "small",
+  "model_presets": {
+    "small": {
+      "sample_rate_hz": 50.0, "patch_size": 60, "d_model": 128, "heads": 4,
+      "encoder_layers": 4, "decoder_layers": 2, "ff_multiplier": 4, "dropout": 0.0,
+      "numeric_embedding_dim": 64, "category_embedding_dim": 32, "num_structure_types": 4,
+      "decoder_type": "cross_attention", "floor_fourier_features": 6,
+      "local_snippet": true, "snippet_context": 30,
+      "ground_residual": true, "ground_sign": -1,
+      "amplitude_factorization": true,
+      "concat_query_dim": 32, "concat_hidden_dim": 256
+    },
+    "base": {
+      "sample_rate_hz": 50.0, "patch_size": 60, "d_model": 256, "heads": 8,
+      "encoder_layers": 6, "decoder_layers": 4, "ff_multiplier": 4, "dropout": 0.05,
+      "numeric_embedding_dim": 64, "category_embedding_dim": 32, "num_structure_types": 4,
+      "decoder_type": "cross_attention", "floor_fourier_features": 6,
+      "local_snippet": true, "snippet_context": 30,
+      "ground_residual": true, "ground_sign": -1,
+      "amplitude_factorization": true,
+      "concat_query_dim": 32, "concat_hidden_dim": 256
+    }
+  },
+  "variants": {
+    "exp5_decoder": {"decoder_type": "concat", "local_snippet": false, "ground_residual": false, "amplitude_factorization": false},
+    "ground_residual": {"decoder_type": "concat", "local_snippet": false, "amplitude_factorization": false},
+    "local_snippet": {"decoder_type": "concat", "amplitude_factorization": false},
+    "cross_attention": {"amplitude_factorization": false},
+    "full": {}
+  },
+  "training_records": ["peer_1", "peer_2", "peer_3", "peer_4", "peer_5", "peer_6", "peer_7"],
+  "training_period_ratios": [0.8, 1.2],
+  "stories": [3, 5, 8],
+  "period_test_ratio": 1.0,
+  "development_records": ["peer_8"],
+  "earthquake_test_records": ["peer_9", "peer_10"],
+  "steps": 12000,
+  "batch_size": 32,
+  "evaluate_every": 400,
+  "learning_rate": 0.001,
+  "minimum_learning_rate": 0.00003,
+  "warmup_steps": 100,
+  "weight_decay": 0.00001,
+  "max_grad_norm": 1.0,
+  "normalization": "per_case",
+  "response_weights": [1.0, 1.0, 1.0],
+  "checkpoint_selection": "train_objective",
+  "scope": "Same data, splits, losses and optimizer as exp5; only the decoder-side design changes across variants. Not a test of generalization with many records (that needs the exp6 data)."
+}
