@@ -17,7 +17,7 @@
     "structure_type": 0, "story_height_m": 3.0, "floor_area_m2": 1000.0, "mass_per_area_kg_m2": 1000.0,
     "year": 2002, "site_category": 2, "site_group": 1, "damping_ratio": 0.05
   },
-  "solver": {"compatibility": "legacy_0_1", "alignment": "physical", "explicit_failure_drift": 0.05},
+  "solver": {"compatibility": "legacy_0_1", "alignment": "legacy", "explicit_failure_drift": 0.05},
   "damage_thresholds": [0.005, 0.008, 0.02, 0.05],
   "structures": {
     "training_stories": [2, 3, 5, 6, 8, 9, 10],

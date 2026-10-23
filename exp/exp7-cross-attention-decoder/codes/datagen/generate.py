@@ -127,7 +127,19 @@ def draw_structure(rng, s, kind):
             'structure_group': kind}
 
 
-def simulate(case, dt=None, alignment=None, keep_grid=False):
+def solver_ground(time, gt, ga):
+    """Ground acceleration the kernel subtracts in its absolute-acceleration output (api.cpp output_ag).
+
+    Linear interpolation on [t_k, t_k+1); at and after the final supplied sample the compatibility
+    output keeps the last interpolated value."""
+    g = np.interp(time, gt, ga)
+    after = time >= gt[-1]
+    if after.any():
+        g[after] = g[np.flatnonzero(~after)[-1]]
+    return g
+
+
+def simulate(case, dt=None, keep_grid=False):
     conf, b = STATE['conf'], STATE['conf']['building']
     n = case['stories']
     base = np.asarray(STATE['materials'][f'type{b["structure_type"]}_N{n:02d}_IM{case["fortification"]}']['material'], dtype=np.float64)
@@ -150,7 +162,7 @@ def simulate(case, dt=None, alignment=None, keep_grid=False):
                   'collapse_drift': [conf['solver']['explicit_failure_drift']]*n},
         'ground_motion': {'time': gt.tolist(), 'acceleration': ga.tolist(), 'record_id': case['record_id']},
         'analysis': {'dt': step, 'duration': conf['total_points']/conf['sample_rate_hz'], 'damping_ratio': b['damping_ratio'],
-                     'integrator': 'central_difference', 'alignment': alignment or conf['solver']['alignment'],
+                     'integrator': 'central_difference', 'alignment': conf['solver']['alignment'],
                      'compatibility': conf['solver']['compatibility']},
         'output': {},
         'provenance': {'dataset_id': conf['dataset_id'], 'record_sha256': record['sha256'],
@@ -160,7 +172,11 @@ def simulate(case, dt=None, alignment=None, keep_grid=False):
     wall = time.perf_counter() - start
     if not np.isclose(r.periods[0], t[0], rtol=1e-10):
         raise ValueError('Independent T1 check failed')
-    grid_ground = np.interp(r.time, gt, ga, right=0.)
+    grid_ground = solver_ground(r.time, gt, ga)
+    displacement = r.displacement
+    if conf['solver']['alignment'] == 'legacy':
+        # Legacy rows store u(t_{i+1}); shift so row i is u(t_i), matching the acceleration rows (as in stage 1).
+        displacement = np.vstack((np.zeros((1, n)), displacement[:-1]))
     factor = round(1/(conf['sample_rate_hz']*step))
     if abs(factor*step*conf['sample_rate_hz'] - 1) > 1e-9:
         raise ValueError('Integration step must divide the output interval')
@@ -168,7 +184,7 @@ def simulate(case, dt=None, alignment=None, keep_grid=False):
     def down(x):
         # Ground and responses share one anti-alias path, so absolute + ground = relative holds at 50 Hz.
         return resample_poly(x, 1, factor, axis=0, padtype='line')[:conf['total_points']]
-    u, a, g = (down(x).astype(np.float32) for x in (r.displacement, r.acceleration, grid_ground))
+    u, a, g = (down(x).astype(np.float32) for x in (displacement, r.acceleration, grid_ground))
     # Damage grade from the stored float32 values, so training-time recomputation agrees exactly.
     stored = u.astype(np.float64)
     drift = np.diff(stored, axis=1, prepend=np.zeros((len(u), 1)))/heights.astype(np.float32).astype(np.float64)
@@ -189,7 +205,7 @@ def simulate(case, dt=None, alignment=None, keep_grid=False):
               'story_heights': heights.astype(np.float32),
               'attributes': np.asarray([n, heights.sum(), case['fortification'], t[0]], dtype=np.float32)}
     if keep_grid:
-        return meta, arrays, r, grid_ground
+        return meta, arrays, r, grid_ground, displacement
     return meta, arrays
 
 
@@ -262,12 +278,12 @@ def preflight(conf, workers):
               {'id': 'probe_N02_stiff', 'part': 'preflight', 'record_id': rid, 'stories': 2, 'fortification': 8,
                'stiffness_coefficient': 2.1, 'structure_group': 'probe', 'target_sa_g': 2.0}]
     for probe in probes:
-        meta, arrays, r, grid_ground = simulate(probe, keep_grid=True)
+        meta, arrays, r, grid_ground, displacement = simulate(probe, keep_grid=True)
         fine_meta, fine = simulate(probe, dt=conf['integration_dt_s']/2)
-        legacy_meta, legacy = simulate(probe, alignment='legacy')
         dt = conf['integration_dt_s']
+        # On the integration grid, absolute + ground must equal the second difference of the aligned displacement.
         relative = r.acceleration + grid_ground
-        second = (r.displacement[2:] - 2*r.displacement[1:-1] + r.displacement[:-2])/dt**2
+        second = (displacement[2:] - 2*displacement[1:-1] + displacement[:-2])/dt**2
         identity = {f'shift_{s}': float(np.abs(relative[1+s:len(relative)-1+s] - second).max()/np.abs(relative).max())
                     for s in (-1, 0, 1)}
 
@@ -276,7 +292,6 @@ def preflight(conf, workers):
         out[probe['id']] = {
             'meta': meta, 'step_halving_relative_difference': {k: rel(fine[k], arrays[k]) for k in ('displacement', 'acceleration')},
             'step_halving_PIDR': [meta['max_PIDR_50Hz'], fine_meta['max_PIDR_50Hz']],
-            'legacy_alignment_relative_difference': {k: rel(legacy[k], arrays[k]) for k in ('displacement', 'acceleration')},
             'relative_acceleration_identity_error': identity}
     s = conf['structures']
     out['T1_table_s'] = {key: float(periods(np.full(v['stories'], conf['building']['floor_area_m2']*conf['building']['mass_per_area_kg_m2']),
