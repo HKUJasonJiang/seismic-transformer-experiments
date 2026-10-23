@@ -2,6 +2,8 @@
 
 User instruction recorded 2026-10-21: design and edit code locally; execute experiments on the 5090 server.
 
+User instruction recorded 2026-10-23: 5090 is unreachable; run exp7 (data generation and experiments) on SSH alias `H200` (shared Linux account; work only inside `~/seismic-exp7`, use its own conda environment `~/seismic-exp7/env`, never modify other users' environments or processes). The rules below that name 5090 apply to H200 for exp7.
+
 - All new experiment code, configuration, reports, and data belong under this repository. Do not edit the other paper directories.
 - Local work is limited to reading, planning, source/configuration edits, Git operations, and viewing/downloading reports. Do not run local simulation, model checks, preprocessing, training, or evaluation scripts.
 - Default execution host is SSH alias `5090`, an existing Windows workstation connection. Use the configured SSH identity and strict host-key checking; do not disable verification.

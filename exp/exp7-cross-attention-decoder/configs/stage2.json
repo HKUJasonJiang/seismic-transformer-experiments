@@ -1,0 +1,53 @@
+{
+  "version": "exp7-cross-attention-decoder-v1-stage2",
+  "stage": "stage2",
+  "device": "cuda:0",
+  "allowed_gpus": ["5090", "H200"],
+  "dataset_format": "exp7_shards",
+  "data_config": "configs/data.json",
+  "seeds": [20261024, 20261025, 20261026],
+  "intensity_vocabulary": [6, 7, 8, 9],
+  "structure_features": [
+    {"name": "stories", "transform": "linear", "scale": 10.0},
+    {"name": "T1_s", "transform": "linear", "scale": 1.0}
+  ],
+  "model_preset": "base",
+  "model_presets": {
+    "base": {
+      "sample_rate_hz": 50.0, "patch_size": 60, "d_model": 256, "heads": 8,
+      "encoder_layers": 6, "decoder_layers": 4, "ff_multiplier": 4, "dropout": 0.05,
+      "numeric_embedding_dim": 64, "category_embedding_dim": 32, "num_structure_types": 4,
+      "decoder_type": "cross_attention", "floor_fourier_features": 6,
+      "local_snippet": true, "snippet_context": 30,
+      "ground_residual": true, "ground_sign": -1,
+      "amplitude_factorization": true,
+      "concat_query_dim": 32, "concat_hidden_dim": 256
+    }
+  },
+  "variants": {
+    "exp5_decoder": {"decoder_type": "concat", "local_snippet": false, "ground_residual": false, "amplitude_factorization": false},
+    "ground_residual": {"decoder_type": "concat", "local_snippet": false, "amplitude_factorization": false},
+    "local_snippet": {"decoder_type": "concat", "amplitude_factorization": false},
+    "cross_attention": {"amplitude_factorization": false},
+    "full": {}
+  },
+  "training_record_counts": [7, 30, 100, 300, 1000],
+  "evaluation_splits": ["train", "development", "seen_record_reference", "unseen_record", "structure_only", "joint", "cross_database"],
+  "holdout_parts": ["structure_only", "joint"],
+  "holdout_groups": ["story_interpolation", "story_extrapolation", "period_interpolation", "period_extrapolation"],
+  "unseen_record_parts": ["development", "unseen_record", "joint", "cross_database"],
+  "save_predictions": ["unseen_record", "joint", "structure_only", "cross_database"],
+  "train_monitor_cases": 2000,
+  "steps": "auto",
+  "batch_size": 32,
+  "evaluate_every": null,
+  "learning_rate": 0.001,
+  "minimum_learning_rate": 0.00003,
+  "warmup_steps": 100,
+  "weight_decay": 0.00001,
+  "max_grad_norm": 1.0,
+  "normalization": "per_case",
+  "response_weights": [1.0, 1.0, 1.0],
+  "checkpoint_selection": "development_objective",
+  "scope": "exp7 stage 2 on the KNET frame dataset (configs/data.json); --records N trains on the first N records of the frozen training order (scaling curve); omitting it uses every training record."
+}

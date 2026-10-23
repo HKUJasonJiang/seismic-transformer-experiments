@@ -1,0 +1,49 @@
+{
+  "dataset_id": "exp7_knet_frame_v1",
+  "record_split_policy": {
+    "seed": 20261023,
+    "near_duplicate_correlation": 0.995,
+    "test_records": 600,
+    "development_records": 300,
+    "historically_evaluated_peer": ["peer_1", "peer_2", "peer_3", "peer_4", "peer_5", "peer_6", "peer_7", "peer_8", "peer_9", "peer_10"]
+  },
+  "record_split": "configs/record_split.json",
+  "materials": "runs/data/materials.json",
+  "sample_rate_hz": 50.0,
+  "record_points": 3000,
+  "total_points": 3300,
+  "integration_dt_s": 0.00025,
+  "building": {
+    "structure_type": 0, "story_height_m": 3.0, "floor_area_m2": 1000.0, "mass_per_area_kg_m2": 1000.0,
+    "year": 2002, "site_category": 2, "site_group": 1, "damping_ratio": 0.05
+  },
+  "solver": {"compatibility": "legacy_0_1", "alignment": "physical", "explicit_failure_drift": 0.05},
+  "damage_thresholds": [0.005, 0.008, 0.02, 0.05],
+  "structures": {
+    "training_stories": [2, 3, 5, 6, 8, 9, 10],
+    "interpolation_stories": [4, 7],
+    "extrapolation_stories": [11, 12, 13, 14],
+    "fortification_levels": [6, 7, 8, 9],
+    "stiffness_range": [0.6, 1.6],
+    "stiffness_gap": [1.15, 1.30],
+    "stiffness_extrapolation": [0.45, 2.1]
+  },
+  "intensity": {
+    "measure": "Sa(T1), 5% damping, of the scaled record",
+    "sa_range_g": null,
+    "calibration": {"records": 50, "cases_per_record": 8, "search_range_g": [0.02, 6.0],
+                    "target_fractions": {"DS_0_1": 0.4, "DS_2": 0.3, "DS_3_up": 0.3}}
+  },
+  "parts": {
+    "train": {"records": "train", "per_record": 16, "structures": "training"},
+    "development": {"records": "development", "per_record": 8, "structures": "training"},
+    "seen_record_reference": {"records": "train_first_300", "per_record": 8, "structures": "training"},
+    "unseen_record": {"records": "test", "per_record": 4, "structures": "training"},
+    "structure_only": {"records": "train_first_300", "per_holdout_group": 4, "structures": "holdout"},
+    "joint": {"records": "test", "per_holdout_group": 2, "structures": "holdout"},
+    "cross_database": {"records": "cross_database", "per_record": 8, "structures": "training"}
+  },
+  "holdout_groups": ["story_interpolation", "story_extrapolation", "period_interpolation", "period_extrapolation"],
+  "shard_size": 1000,
+  "workers": 96
+}

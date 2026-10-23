@@ -9,7 +9,7 @@ from dataclasses import asdict
 import torch
 from common import (EXP, REPO, CHANNELS, Objective, metrics, file_hash, state_hash, read, write, input_batch,
                     resolve_config, load_split, batch, take, evaluate, rich_metrics, save_predictions,
-                    structural_hash, fit_output_scales)
+                    structural_hash, fit_output_scales, data_hashes)
 from model import Model, predict, load_model
 from src.losses import ResponseScales
 
@@ -84,19 +84,28 @@ def main():
     parser.add_argument('--variant', default='full')
     parser.add_argument('--seed', type=int)
     parser.add_argument('--resume', action='store_true')
+    parser.add_argument('--config', default='configs/run.json')
+    parser.add_argument('--records', type=int, help='first N records of the frozen training order (shard datasets only)')
     args = parser.parse_args()
-    base = read(EXP/'configs/run.json')
+    config_path = EXP/args.config
+    base = read(config_path)
     conf = resolve_config(base, args.variant)
     seed = base['seeds'][0] if args.seed is None else args.seed
     if seed not in base['seeds']:
         raise ValueError(f'Seed {seed} is not one of the predeclared seeds {base["seeds"]}')
     conf['seed'] = seed
-    run_dir = EXP/'runs'/args.variant/f'seed{seed}'
-    out_dir = EXP/'results'/args.variant/f'seed{seed}'
+    shards = conf['dataset_format'] == 'exp7_shards'
+    if args.records is not None:
+        if not shards or args.records not in conf['training_record_counts']:
+            raise ValueError(f'--records must be one of {conf.get("training_record_counts")} on a shard dataset')
+        conf['training_record_count'] = args.records
+    name = f'{args.variant}/records{args.records}' if args.records is not None else args.variant
+    run_dir = EXP/'runs'/conf['stage']/name/f'seed{seed}'
+    out_dir = EXP/'results'/conf['stage']/name/f'seed{seed}'
     torch.set_num_threads(4)
     torch.set_num_interop_threads(2)
     torch.backends.mha.set_fastpath_enabled(False)
-    assert torch.cuda.is_available() and '5090' in torch.cuda.get_device_name()
+    assert torch.cuda.is_available() and any(g in torch.cuda.get_device_name() for g in conf['allowed_gpus'])
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     run_dir.mkdir(parents=True, exist_ok=True)
@@ -104,7 +113,18 @@ def main():
     cases, items, meta = load_split('train', conf)
     dc, di, _ = load_split('development', conf)
     b = batch(items, conf['device'])
+    del items
     dev = batch(di, conf['device'])
+    if conf['steps'] == 'auto':
+        # exp7.md 7.2: about 30 passes over the training cases, clipped to [12000, 80000] updates.
+        conf['steps'] = int(min(max(math.ceil(30*len(cases)/conf['batch_size']), 12000), 80000))
+        conf['evaluate_every'] = max(conf['steps']//30, 1)
+    if conf.get('train_monitor_cases') and len(cases) > conf['train_monitor_cases']:
+        pick = torch.randperm(len(cases), generator=torch.Generator().manual_seed(0))[:conf['train_monitor_cases']].sort().values
+        monitor_cases = [cases[i] for i in pick.tolist()]
+        monitor = take(b, pick.to(conf['device']))
+    else:
+        monitor_cases, monitor = cases, b
     scales, scale_fit = ResponseScales.fit_training_batches([b], fit_source='exp7 training records and period configurations only')
     output_scales, output_fit = fit_output_scales(b, conf)
     entries = {c['id']: c for c in cases+dc}
@@ -114,12 +134,13 @@ def main():
     sources = {p.relative_to(EXP).as_posix(): file_hash(p) for p in sorted((EXP/'codes').rglob('*.py'))}
     prov = {'git_sha': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=REPO, text=True).strip(),
             'variant': args.variant, 'seed': seed, 'config': conf, 'source_sha256': sources,
-            'config_sha256': file_hash(EXP/'configs/run.json'),
+            'config_sha256': file_hash(config_path),
             'loss_scales': asdict(scales), 'loss_scale_fit': scale_fit,
             'output_scales': output_scales, 'output_scale_fit': output_fit,
             'train_case_ids': b['case_ids'], 'development_case_ids': dev['case_ids'],
-            'manifest_sha256': {name: file_hash(REPO/conf['dataset']/f'{name}.json') for name in ('train', 'validation', 'test')},
-            'train_npz_sha256': {c['id']: c['npz_sha256'] for c in cases}, 'initial_state_sha256': initial,
+            'manifest_sha256': ({'dataset_manifest': file_hash(EXP/'runs/data'/read(EXP/conf['data_config'])['dataset_id']/'manifest.json')}
+                                if shards else {n: file_hash(REPO/conf['dataset']/f'{n}.json') for n in ('train', 'validation', 'test')}),
+            'train_data_sha256': data_hashes(cases), 'initial_state_sha256': initial,
             'parameters': sum(p.numel() for p in model.parameters()), 'torch': str(torch.__version__),
             'gpu': torch.cuda.get_device_name(),
             'train_counts': dict(Counter(f'{c["stories"]}F_DS{c["DS_ref"]}' for c in cases))}
@@ -167,9 +188,9 @@ def main():
             model.eval()
             torch.backends.cuda.matmul.allow_tf32 = False
             with torch.no_grad():
-                p, score = evaluate(model, b, conf, scales)
+                p, score = evaluate(model, monitor, conf, scales)
                 dp, dscore = evaluate(model, dev, conf, scales)
-                tm = metrics(p, b, entries)['summary']['all']
+                tm = metrics(p, monitor, entries)['summary']['all']
                 vm = metrics(dp, dev, entries)['summary']['all']
             chosen = score if conf['checkpoint_selection'] == 'train_objective' else dscore
             if chosen < best:
@@ -195,21 +216,34 @@ def main():
     ck = torch.load(run_dir/'best.pt', map_location='cpu', weights_only=True)
     report = {'provenance': prov, 'best_step': ck['step'], 'checkpoint_selection': conf['checkpoint_selection'],
               'checkpoint_sha256': file_hash(run_dir/'best.pt'), 'state_sha256': frozen, 'splits': {}}
-    train_struct = {structural_hash(c) for c in cases}
-    audit = {'training_records': conf['training_records'], 'training_period_ratios': conf['training_period_ratios'],
-             'trained_structure_count': len(train_struct), 'splits': {}}
-    hashes = {r['record_id']: r['sha256'] for r in meta['record_split']['records']}
-    assert not {hashes[r] for r in conf['training_records']} & {hashes[r] for r in conf['earthquake_test_records']}
-    for name in ('train', 'development', 'period', 'earthquake'):
-        cs, its, _ = load_split(name, conf)
-        bs = batch(its, conf['device'])
-        if name in ('period', 'earthquake'):
-            assert not set(bs['case_ids']) & set(b['case_ids'])
-            if name == 'period':
-                assert not {structural_hash(c) for c in cs} & train_struct
-                assert set(c['record_id'] for c in cs) <= set(conf['training_records'])
-            else:
-                assert {structural_hash(c) for c in cs} <= train_struct
+    train_ids, train_records = set(b['case_ids']), {c['record_id'] for c in cases}
+    if shards:
+        audit = {'training_record_count': conf.get('training_record_count'), 'training_records': len(train_records), 'splits': {}}
+    else:
+        train_struct = {structural_hash(c) for c in cases}
+        audit = {'training_records': conf['training_records'], 'training_period_ratios': conf['training_period_ratios'],
+                 'trained_structure_count': len(train_struct), 'splits': {}}
+        hashes = {r['record_id']: r['sha256'] for r in meta['record_split']['records']}
+        assert not {hashes[r] for r in conf['training_records']} & {hashes[r] for r in conf['earthquake_test_records']}
+    for name in conf['evaluation_splits']:
+        if name == 'train':
+            cs, bs = monitor_cases, monitor
+        else:
+            cs, its, _ = load_split(name, conf)
+            bs = batch(its, conf['device'])
+            del its
+            assert not set(bs['case_ids']) & train_ids
+        if shards and name != 'train':
+            groups = {c['structure_group'] for c in cs}
+            # Held-out structure parts contain only held-out groups; all other parts only training-distribution structures.
+            assert groups <= set(conf['holdout_groups']) if name in conf['holdout_parts'] else groups == {'training'}
+            if name in conf['unseen_record_parts']:
+                assert not {c['record_id'] for c in cs} & train_records
+        elif name == 'period':
+            assert not {structural_hash(c) for c in cs} & train_struct
+            assert set(c['record_id'] for c in cs) <= set(conf['training_records'])
+        elif name == 'earthquake':
+            assert {structural_hash(c) for c in cs} <= train_struct
         model.validate(input_batch(bs, conf))
         pred, score = evaluate(model, bs, conf, scales)
         result = rich_metrics(pred, bs, {c['id']: c for c in cs})
@@ -220,12 +254,13 @@ def main():
             ix = torch.tensor(fixed, device=conf['device'])
             result['fixed_PGA_summary'] = metrics({k: v[ix] for k, v in pred.items()}, take(bs, ix), {c['id']: c for c in cs})['summary']
         report['splits'][name] = result
-        save_predictions(run_dir/f'{name}_predictions.npz', pred, bs)
+        if name in conf.get('save_predictions', conf['evaluation_splits']):
+            save_predictions(run_dir/f'{name}_predictions.npz', pred, bs)
         audit['splits'][name] = {'count': len(cs), 'nonlinear_count': sum(c['DS_ref'] > 2 for c in cs),
-                                 'records': sorted({c['record_id'] for c in cs}),
-                                 'period_ratios': sorted({c['period_ratio'] for c in cs}),
-                                 'case_ids': bs['case_ids'], 'npz_sha256': {c['id']: c['npz_sha256'] for c in cs},
+                                 'records': len({c['record_id'] for c in cs}),
+                                 'case_ids': bs['case_ids'], 'data_sha256': data_hashes(cs),
                                  'counts_by_stories': dict(Counter(str(c['stories']) for c in cs))}
+        del bs, pred
         print(name+' '+json.dumps(result['summary']['all']), flush=True)
     assert state_hash(model) == frozen
     # Repeat interface audits with trained weights; no optimizer changes.
@@ -240,9 +275,8 @@ def main():
         export_mse = {k: float((p[k].double()-q[k].double()).square().mean()) for k in CHANNELS}
         assert all(v == 0 for v in export_mse.values())
     report['audit'] = {'trained_interface_checks': trained_checks, 'safe_reload_difference_mse': export_mse,
-                       'weights_unchanged_in_evaluation': True, 'source_record_hash_disjoint': True,
-                       'known_earthquake_test_structures': True, 'unseen_period_structures': True,
-                       'all_npz_hashes_verified': True}
+                       'weights_unchanged_in_evaluation': True, 'case_ids_disjoint_from_training': True,
+                       'split_structure_and_record_rules_asserted': True, 'all_data_hashes_verified': True}
     write(out_dir/'report.json', report)
     write(out_dir/'split_audit.json', audit)
     print('TRAIN_AND_EVALUATION_COMPLETE', flush=True)

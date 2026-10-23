@@ -1,6 +1,9 @@
 {
   "version": "exp7-cross-attention-decoder-v1",
+  "stage": "stage1",
   "device": "cuda:0",
+  "allowed_gpus": ["5090", "H200"],
+  "evaluation_splits": ["train", "development", "period", "earthquake"],
   "dataset": "stage1/data/peer10_nonlinear_v1",
   "dataset_format": "peer10_npz",
   "seeds": [20261024, 20261025, 20261026],

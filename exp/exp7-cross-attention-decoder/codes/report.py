@@ -43,10 +43,11 @@ def main():
     parser.add_argument('--variant', default='full')
     parser.add_argument('--seed', type=int, required=True)
     args = parser.parse_args()
+    # Representative-case rules below are the exp5 PEER-10 rules, so this script serves stage 1 only.
     conf = resolve_config(read(EXP/'configs/run.json'), args.variant)
-    run_dir = EXP/'runs'/args.variant/f'seed{args.seed}'
-    out_dir = EXP/'results'/args.variant/f'seed{args.seed}'
-    fig_dir = EXP/'figures'/f'{args.variant}_seed{args.seed}'
+    run_dir = EXP/'runs'/conf['stage']/args.variant/f'seed{args.seed}'
+    out_dir = EXP/'results'/conf['stage']/args.variant/f'seed{args.seed}'
+    fig_dir = EXP/'figures'/conf['stage']/f'{args.variant}_seed{args.seed}'
     fig_dir.mkdir(parents=True, exist_ok=True)
     report = read(out_dir/'report.json')
     label = f'exp7 {args.variant}'

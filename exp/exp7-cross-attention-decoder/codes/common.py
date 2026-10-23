@@ -64,8 +64,16 @@ def split_predicate(name, conf):
 
 
 def load_split(name, conf):
+    if conf['dataset_format'] == 'exp7_shards':
+        from data.shards import load_part
+        data_conf = read(EXP/conf['data_config'])
+        records = None
+        if name == 'train' and conf.get('training_record_count'):
+            # Nested prefixes of the frozen training order (record-count scaling curve).
+            records = read(EXP/data_conf['record_split'])['training_order'][:conf['training_record_count']]
+        return load_part(data_conf, name, records)
     if conf['dataset_format'] != 'peer10_npz':
-        raise NotImplementedError('Only the exp5 PEER-10 NPZ manifests are implemented; exp6 shards need their own reader')
+        raise NotImplementedError(f'Unknown dataset_format {conf["dataset_format"]}')
     manifest = {'train': 'train', 'period': 'train', 'development': 'validation', 'earthquake': 'test'}[name]
     return read_selected(REPO/conf['dataset']/f'{manifest}.json', split_predicate(name, conf))
 
@@ -154,6 +162,11 @@ def rich_metrics(pred, b, entries):
             s['damage_counts'] = {label: sum(op(r['DS_pred'], r['DS_ref']) for r in rows) for label, op in
                                   [('exact', lambda a, b: a == b), ('under', lambda a, b: a < b), ('over', lambda a, b: a > b)]}
     return result
+
+
+def data_hashes(cases):
+    """Shard-level hashes for shard datasets, per-case NPZ hashes for the exp5 data."""
+    return dict(sorted({c.get('shard', c['id']): c['npz_sha256'] for c in cases}.items()))
 
 
 def save_predictions(path, pred, b):

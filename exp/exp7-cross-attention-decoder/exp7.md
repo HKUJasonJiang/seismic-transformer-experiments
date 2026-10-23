@@ -2,8 +2,11 @@
 
 状态（2026-10-23）：
 
-- 模型代码、第一阶段配置已写好，并已在本地提交（`6638a21`）。**还没有在 5090 上运行过。**
-- 新数据集的生成代码和分片读取代码**还没有写**。
+- 模型代码、两个阶段的配置、新数据集的生成代码和分片读取代码都已写好。**都还没有运行过**，所以都未经验证。
+- 执行主机从 5090 改为 H200（5090 连不上，用户 2026-10-23 指定）。H200 上的环境已经建好：`~/seismic-exp7/env`（PyTorch 2.14 + CUDA 13），模拟器已编译并跑通示例。
+- 开始之前还有两件事没解决（见第 3 节"当前部署问题"）：
+  1. 结构参数导出程序只能在 Windows 上运行；
+  2. H200 访问不了 Hugging Face，拿不到第一阶段要用的 exp5 数据。
 - exp6 的数据设计已经合并到本文件，exp6.md 只作历史保留。
 
 写法说明：本文件按"没读过之前任何讨论的人也能照着执行"来写。第 0 节是总览，列出全部设计决定；第 1 节以后是细节。凡是写了"预估"的数字，都要先实测，确认后才能用。
@@ -117,13 +120,15 @@ exp7 同时处理这两点：
 
 ### 0.7 执行顺序和停止点
 
-1. 在 5090 上跑第一阶段 `full` 变体的第一个种子，确认自检通过 → **有问题就停下修正**
+1. 在 H200 上跑第一阶段 `full` 变体的第一个种子，确认自检通过 → **有问题就停下修正**
 2. 跑完第一阶段 15 次，汇总，选出变体
-3. 写数据生成代码和分片读取代码（第 5 节）
-4. 数据预检（第 5.2 节）→ **停下，把结果交用户确认**
-5. 生成全量数据并审计
+3. 地震动清点与划分（`inventory.py`），在 Windows 上导出结构参数（`export_materials.py`），复制到 H200
+4. 数据预检和强度标定（第 5.2 节）→ **停下，把结果交用户确认**，把确认后的 Sa(T1) 区间写进 `configs/data.json`
+5. 生成全量数据（`generate.py plan`，再 `generate.py run`）并审计
 6. 第二阶段：主模型 → 缩放曲线 → 结构泛化与跨数据库测试 → 基线
 7. 把结果写回本文件末尾的"实际结果"
+
+第 1–2 步（旧数据）和第 3–5 步（新数据）互不依赖，可以同时进行。
 
 ### 0.8 本版不做
 
@@ -180,12 +185,21 @@ exp7 同时处理这两点：
 - 数据分片和权重放私有 Hugging Face；代码、配置、本文件和小型摘要进公开 GitHub。
 - 每次运行都要记录 Git 版本、配置哈希、数据清单哈希、随机种子、测试访问次数，以及材料失效被剔除的数量。
 
-**当前部署问题（2026-10-23）**：
+**执行主机（2026-10-23 起）**：SSH 别名 `H200`。这是多人共用的 Linux 账号，本实验只在 `~/seismic-exp7` 下工作：
 
-- 推送到 GitHub 被本地权限设置拦截；
-- SSH 到 5090 能完成公钥认证，但远程命令 5 分钟内都没有返回。
+| 内容 | 位置 |
+|---|---|
+| 仓库克隆 | `~/seismic-exp7/experiment` |
+| 模拟器源码与编译结果 | `~/seismic-exp7/mdof-workbench`（私有，提交 `75eee49`） |
+| 自建的 conda 环境 | `~/seismic-exp7/env`；使用前执行 `source ~/seismic-exp7/envrc.sh` |
+| KNET/PEER 文本记录 | `~/seismic-exp7/All_GMs/KNET(3474)`、`PEER(65)`，与 Hugging Face 上 `JasonXF/SeismicTransformerData` 的 `MDOF/All_GMs` 同源，从本地副本复制而来 |
 
-两者都要先解决，才能开始第一阶段。
+不要改动别人的环境和进程。GPU 只有一块 H200，启动前先用 `nvidia-smi` 查看占用。
+
+**当前部署问题**：
+
+1. **结构参数导出程序只能在 Windows 上运行**（`3-Data/MDOF_BenchMark/Flexural_Shear_0.1.exe`），H200 上没有 Wine。需要在一台 Windows 机器上运行 `codes/data/export_materials.py`，再把生成的 `materials.json` 复制到 H200 的 `runs/data/`。本地运行这一步与上面"本地不做预处理"的规则冲突，需要用户同意。
+2. **H200 访问不了 Hugging Face。** 直连会卡住；它常用的 `127.0.0.1:7897` 代理当前没有在运行。第一阶段的 exp5 数据（`stage1/data/peer10_nonlinear_v1`）只在私有 Hugging Face 和 5090 上，结果归档也要用到 Hugging Face。需要用户在本地终端开一个反向代理，例如 `ssh -N -R 7897:127.0.0.1:7890 H200`，或者用其他方式恢复网络。
 
 ## 4. 模型细节
 
@@ -252,14 +266,39 @@ exp7 同时处理这两点：
 
 ## 5. 新数据集细节
 
-**代码状态：还没有写。** 计划放在 `codes/data/` 下：
+**代码状态：已写好，还没有运行。** 全部在 `codes/data/` 下，参数统一写在 `configs/data.json`：
 
-- `inventory.py`：地震动清点、去重、划分；
-- `generate.py`：结构参数生成、强度标定、模拟、写分片；
-- `audit.py`：数据审计；
-- `shards.py`：训练时的分片读取器。
+| 文件 | 在哪运行 | 作用 |
+|---|---|---|
+| `records.py` | — | 读取文本记录（第一行点数，之后"时间 加速度"两列），检查 3,000 点、50 Hz |
+| `inventory.py` | H200 | 清点 KNET 和 PEER、找近重复、按组划分；写出 `configs/record_split.json`，已存在时拒绝覆盖 |
+| `export_materials.py` | **Windows** | 对"框架 × 层数 2–14 × 设防等级 6–9"共 52 种组合运行参数导出程序，写出 `materials.json` |
+| `generate.py preflight` | H200 | 积分步长对比、相对加速度恒等式核对、physical 与 legacy 对齐方式对比、200 个算例的耗时，以及各组合的 T1 表 |
+| `generate.py calibrate` | H200 | 训练池前 50 条记录 × 每条 8 个算例，Sa(T1) 在 0.02–6 g 内抽样，给出建议的 Sa(T1) 区间 |
+| `generate.py plan` | H200 | 按冻结的配置抽出全部算例（结构、强度），写出 `runs/data/<dataset_id>/plan.json`，已存在时拒绝覆盖 |
+| `generate.py run` | H200 | 多进程模拟，每 1,000 个算例写一个分片，可中断续跑；最后写出 `manifest.json` |
+| `shards.py` | H200 | 训练时读分片，校验哈希，输出与 exp5 相同的逐算例数据 |
 
-生成部分参考 `stage1/scripts/five_story_preview.py`（`baseline()` 导出材料，`case_config()` 组装算例）和 `stage1/scripts/generate_peer10.py`（多进程、失效剔除、保存格式），复制后修改，不直接导入。
+数据审计（第 5.7 节）的脚本还没写。
+
+生成逻辑参考了 `stage1/scripts/five_story_preview.py` 和 `stage1/scripts/generate_peer10.py`，复制后修改，不直接导入。主要差别：
+
+- 时间对齐用 physical；
+- 地面加速度与响应走同一条降采样路径；
+- 强度按 Sa(T1) 抽样；
+- 损伤等级按保存后的 float32 位移计算，与训练时的复算完全一致。
+
+**运行顺序**（H200，在 `~/seismic-exp7/experiment/exp/exp7-cross-attention-decoder` 下，先 `source ~/seismic-exp7/envrc.sh`）：
+
+```bash
+export EXP7_KNET_DIR="$HOME/seismic-exp7/All_GMs/KNET(3474)" EXP7_PEER_DIR="$HOME/seismic-exp7/All_GMs/PEER(65)"
+python codes/data/inventory.py --knet-dir "$EXP7_KNET_DIR" --peer-dir "$EXP7_PEER_DIR"
+# Windows 上：python codes/data/export_materials.py --out <目录>，把 materials.json 复制到 runs/data/
+python codes/data/generate.py preflight
+python codes/data/generate.py calibrate    # 停下交用户确认，再把 Sa(T1) 区间写进 configs/data.json 的 intensity.sa_range_g
+python codes/data/generate.py plan
+python codes/data/generate.py run
+```
 
 ### 5.1 数据来源
 
@@ -377,18 +416,23 @@ exp7 同时处理这两点：
 
 ## 7. 第二阶段：在新数据集上
 
-### 7.1 需要先补的代码
+### 7.1 代码（已写好，未运行）
 
-1. `codes/data/shards.py` 分片读取器。目前 `common.load_split` 只支持 exp5 格式，遇到其他格式会直接报错。
-2. `run.py`、`report.py`、`summarize.py` 增加 `--config` 参数。第二阶段用 `configs/stage2.json`；输出目录要加上阶段名，避免与第一阶段混在一起。
-3. 第二阶段的评估集合名改为第 5.5 节中的各部分。原来针对 exp5 划分的断言，要换成针对新划分的同类断言：记录不交叉，留出组结构不在训练分布内。
+- `common.load_split` 遇到 `dataset_format = "exp7_shards"` 时，改用 `codes/data/shards.py` 读分片；加 `--records N` 时，只取训练顺序中前 N 条记录。
+- `run.py` 支持 `--config` 和 `--records`。输出目录为 `runs/<阶段>/<变体>[/records<N>]/seed<种子>/`。评估集合按配置中的 `evaluation_splits` 逐个处理，并逐项断言：
+  - 测试算例不在训练集中；
+  - 留出组只含留出结构，其他部分只含训练分布内的结构；
+  - 未见记录的部分与训练记录不交叉。
+- 训练集太大，每次评估只用固定的 2,000 个训练算例监测训练误差；挑选权重用开发集。
+- 为控制体积，只保存四个测试部分的预测：未见记录、结构和记录都没见过、只有结构没见过、跨数据库。
+- `report.py` 的代表算例规则是针对 exp5 数据的，第二阶段的画图脚本**还没写**。
 
-### 7.2 配置
+### 7.2 配置（`configs/stage2.json`）
 
-- `model_preset` 改为 `base`；
-- `checkpoint_selection` 改为 `development_objective`；
+- `model_preset` 为 `base`；
+- `checkpoint_selection` 为 `development_objective`；
 - 数值输入仍为 [层数/10, T1]；
-- 更新次数 = clip(训练算例数 × 30 / 32, 12000, 80000)，每隔总次数的 1/30 在开发集上评估一次。
+- `steps` 为 `auto`：更新次数 = clip(训练算例数 × 30 / 32, 12000, 80000)，每隔总次数的 1/30 在开发集上评估一次。
 
 ### 7.3 实验
 
@@ -405,16 +449,27 @@ exp7 同时处理这两点：
 | 线性弹性结构 | 同一结构、同一初始刚度和 5% 阻尼，做线性时程分析。它用到了模型拿不到的完整结构参数 | 区分误差来自非线性还是来自学习 |
 | 最近邻查表 | 在训练集中找层数相同、T1 最接近的结构，再在其中找反应谱（0.05–3 秒，对数谱距离）最接近的记录，把它的最大层间位移角和楼层峰值加速度按 Sa(T1) 之比缩放 | 只比峰值和损伤等级，回答"网络是否胜过查表" |
 
-## 8. 运行方法（只在 5090 上，在 `experiment/` 目录下）
+## 8. 运行方法（H200，在 `~/seismic-exp7/experiment` 下，先 `source ~/seismic-exp7/envrc.sh`）
 
 第一阶段：
 
-```powershell
+```bash
 python exp/exp7-cross-attention-decoder/codes/run.py --variant full --seed 20261024
 python exp/exp7-cross-attention-decoder/codes/run.py --variant full --seed 20261024 --resume
 python exp/exp7-cross-attention-decoder/codes/summarize.py
 python exp/exp7-cross-attention-decoder/codes/report.py --variant full --seed 20261024
 ```
+
+第二阶段：
+
+```bash
+python exp/exp7-cross-attention-decoder/codes/run.py --config configs/stage2.json --variant full --seed 20261024
+python exp/exp7-cross-attention-decoder/codes/run.py --config configs/stage2.json --variant full --seed 20261024 --records 100
+python exp/exp7-cross-attention-decoder/codes/summarize.py --config configs/stage2.json
+```
+
+- 第一条是主模型，使用全部训练记录。
+- 第二条是缩放曲线上的一个点，`--records` 取 7、30、100、300 或 1000。
 
 - 先单独跑 `full` 的第一个种子，确认自检全部通过，再跑其余 14 次。
 - 其余运行按 `exp5_decoder` → `ground_residual` → `local_snippet` → `cross_attention` → `full` 的顺序串行执行，每个变体跑完 3 个种子再进入下一个。
@@ -424,10 +479,12 @@ python exp/exp7-cross-attention-decoder/codes/report.py --variant full --seed 20
 
 | 内容 | 位置 |
 |---|---|
-| 权重、曲线、预测、来源记录 | `runs/<变体>/seed<种子>/` |
-| 指标、划分审计、自检结果 | `results/<变体>/seed<种子>/` |
-| 汇总 | `results/SUMMARY.md`、`results/summary.json` |
-| 图 | `figures/<变体>_seed<种子>/` |
+| 权重、曲线、预测、来源记录 | `runs/<阶段>/<变体>[/records<N>]/seed<种子>/` |
+| 指标、划分审计、自检结果 | `results/<阶段>/<变体>[/records<N>]/seed<种子>/` |
+| 汇总 | `results/<阶段>/SUMMARY.md`、`results/<阶段>/summary.json` |
+| 图 | `figures/<阶段>/<变体>_seed<种子>/` |
+| 新数据集 | `runs/data/<dataset_id>/`（`plan.json`、`shards/`、`manifest.json`），以及 `runs/data/materials.json` |
+| 数据预检与标定 | `results/preflight/` |
 | 私有归档 | `codes/archive.py`，需在服务器上设置 `HF_REPO_ID` |
 
 ## 9. 自检（`run.py` 的 `smoke`，训练前和用最终权重各执行一次，不通过就停止）
@@ -465,7 +522,9 @@ python exp/exp7-cross-attention-decoder/codes/report.py --variant full --seed 20
 | `codes/summarize.py` | 已写 | 跨变体、跨种子汇总，按开发集选变体 |
 | `codes/legacy_metrics.py`、`codes/src/*.py`、`codes/archive.py` | 从 exp5 原样复制 | 损失、指标、数据读取 |
 | `configs/run.json` | 已写 | 第一阶段：两套规模、五个变体、训练设置 |
-| `codes/data/*.py`、`configs/stage2.json`、`configs/record_split.json` | 未写 | 第二阶段的数据生成、读取和配置 |
+| `codes/data/*.py`、`configs/data.json`、`configs/stage2.json` | 已写 | 新数据集的清点、参数导出、生成、读取；第二阶段配置 |
+| `configs/record_split.json` | 由 `inventory.py` 生成 | 冻结的地震动划分 |
+| 数据审计脚本、第二阶段画图脚本、基线脚本 | 未写 | |
 
 ## 12. 已知限制
 
