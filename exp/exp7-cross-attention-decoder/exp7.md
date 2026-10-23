@@ -538,4 +538,20 @@ python exp/exp7-cross-attention-decoder/codes/summarize.py --config configs/stag
 
 ## 实际结果
 
-（尚未执行）
+### 2026-10-23 地震动清点与划分（H200，代码版本 `76aba5a`）
+
+- 读取 KNET 3,474 条、PEER 65 条，全部为 3,000 点、50 Hz，格式检查都通过。
+- 近重复（归一化相关系数大于 0.995）只有 2 组，都是 KNET 内部的成对记录：knet_2747 与 knet_2806，以及 knet_2749 与另一条（完整列表见 `configs/record_split.json`）。没有 KNET 与 PEER 之间的近重复。全部记录两两之间的最大相关系数为 0.9986。
+- 划分结果：
+
+  | 集合 | 条数 |
+  |---|---:|
+  | 训练池 | 2,574 |
+  | 开发集 | 300 |
+  | KNET 测试集 | 600 |
+  | 跨数据库（PEER） | 55 |
+  | 排除（peer_1–10） | 10 |
+
+- 冻结文件 `configs/record_split.json` 的 SHA256 为 `d663f2a3c166547d45293e09ebacb08403777dccb33200294ba809dc8587bde6`。
+
+其余各步尚未执行。
