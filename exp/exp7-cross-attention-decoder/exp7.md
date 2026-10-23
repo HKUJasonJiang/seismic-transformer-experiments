@@ -198,7 +198,7 @@ exp7 同时处理这两点：
 
 **当前部署问题**：
 
-1. **结构参数导出程序只能在 Windows 上运行**（`3-Data/MDOF_BenchMark/Flexural_Shear_0.1.exe`），H200 上没有 Wine。需要在一台 Windows 机器上运行 `codes/data/export_materials.py`，再把生成的 `materials.json` 复制到 H200 的 `runs/data/`。本地运行这一步与上面"本地不做预处理"的规则冲突，需要用户同意。
+1. **结构参数导出程序只能在 Windows 上运行**（`3-Data/MDOF_BenchMark/Flexural_Shear_0.1.exe`），H200 上没有 Wine。需要在一台 Windows 机器上运行 `codes/datagen/export_materials.py`，再把生成的 `materials.json` 复制到 H200 的 `runs/data/`。本地运行这一步与上面"本地不做预处理"的规则冲突，需要用户同意。
 2. **H200 访问不了 Hugging Face。** 直连会卡住；它常用的 `127.0.0.1:7897` 代理当前没有在运行。第一阶段的 exp5 数据（`stage1/data/peer10_nonlinear_v1`）只在私有 Hugging Face 和 5090 上，结果归档也要用到 Hugging Face。需要用户在本地终端开一个反向代理，例如 `ssh -N -R 7897:127.0.0.1:7890 H200`，或者用其他方式恢复网络。
 
 ## 4. 模型细节
@@ -266,7 +266,7 @@ exp7 同时处理这两点：
 
 ## 5. 新数据集细节
 
-**代码状态：已写好，还没有运行。** 全部在 `codes/data/` 下，参数统一写在 `configs/data.json`：
+**代码状态：已写好，还没有运行。** 全部在 `codes/datagen/` 下，参数统一写在 `configs/data.json`：
 
 | 文件 | 在哪运行 | 作用 |
 |---|---|---|
@@ -292,12 +292,12 @@ exp7 同时处理这两点：
 
 ```bash
 export EXP7_KNET_DIR="$HOME/seismic-exp7/All_GMs/KNET(3474)" EXP7_PEER_DIR="$HOME/seismic-exp7/All_GMs/PEER(65)"
-python codes/data/inventory.py --knet-dir "$EXP7_KNET_DIR" --peer-dir "$EXP7_PEER_DIR"
-# Windows 上：python codes/data/export_materials.py --out <目录>，把 materials.json 复制到 runs/data/
-python codes/data/generate.py preflight
-python codes/data/generate.py calibrate    # 停下交用户确认，再把 Sa(T1) 区间写进 configs/data.json 的 intensity.sa_range_g
-python codes/data/generate.py plan
-python codes/data/generate.py run
+python codes/datagen/inventory.py --knet-dir "$EXP7_KNET_DIR" --peer-dir "$EXP7_PEER_DIR"
+# Windows 上：python codes/datagen/export_materials.py --out <目录>，把 materials.json 复制到 runs/data/
+python codes/datagen/generate.py preflight
+python codes/datagen/generate.py calibrate    # 停下交用户确认，再把 Sa(T1) 区间写进 configs/data.json 的 intensity.sa_range_g
+python codes/datagen/generate.py plan
+python codes/datagen/generate.py run
 ```
 
 ### 5.1 数据来源
@@ -418,7 +418,7 @@ python codes/data/generate.py run
 
 ### 7.1 代码（已写好，未运行）
 
-- `common.load_split` 遇到 `dataset_format = "exp7_shards"` 时，改用 `codes/data/shards.py` 读分片；加 `--records N` 时，只取训练顺序中前 N 条记录。
+- `common.load_split` 遇到 `dataset_format = "exp7_shards"` 时，改用 `codes/datagen/shards.py` 读分片；加 `--records N` 时，只取训练顺序中前 N 条记录。
 - `run.py` 支持 `--config` 和 `--records`。输出目录为 `runs/<阶段>/<变体>[/records<N>]/seed<种子>/`。评估集合按配置中的 `evaluation_splits` 逐个处理，并逐项断言：
   - 测试算例不在训练集中；
   - 留出组只含留出结构，其他部分只含训练分布内的结构；
@@ -522,7 +522,7 @@ python exp/exp7-cross-attention-decoder/codes/summarize.py --config configs/stag
 | `codes/summarize.py` | 已写 | 跨变体、跨种子汇总，按开发集选变体 |
 | `codes/legacy_metrics.py`、`codes/src/*.py`、`codes/archive.py` | 从 exp5 原样复制 | 损失、指标、数据读取 |
 | `configs/run.json` | 已写 | 第一阶段：两套规模、五个变体、训练设置 |
-| `codes/data/*.py`、`configs/data.json`、`configs/stage2.json` | 已写 | 新数据集的清点、参数导出、生成、读取；第二阶段配置 |
+| `codes/datagen/*.py`、`configs/data.json`、`configs/stage2.json` | 已写 | 新数据集的清点、参数导出、生成、读取；第二阶段配置 |
 | `configs/record_split.json` | 由 `inventory.py` 生成 | 冻结的地震动划分 |
 | 数据审计脚本、第二阶段画图脚本、基线脚本 | 未写 | |
 

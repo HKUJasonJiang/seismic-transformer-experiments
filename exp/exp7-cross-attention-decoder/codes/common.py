@@ -65,7 +65,7 @@ def split_predicate(name, conf):
 
 def load_split(name, conf):
     if conf['dataset_format'] == 'exp7_shards':
-        from data.shards import load_part
+        from datagen.shards import load_part
         data_conf = read(EXP/conf['data_config'])
         records = None
         if name == 'train' and conf.get('training_record_count'):
