@@ -1,21 +1,25 @@
-"""Windows only: export legacy ten-parameter story materials for every (type, stories, fortification) in configs/data.json.
+"""Export legacy ten-parameter story materials for every (type, stories, fortification) in configs/data.json.
 
 The archived parameter generator is a Windows executable (matcodeinput=3: parameter export only; no responses
-are used). Mirrors stage1/scripts/five_story_preview.py baseline() for each combination.
+are used), so this runs on Windows or under WSL interop with --out on a Windows drive. Mirrors
+stage1/scripts/five_story_preview.py baseline() for each combination.
   python codes/datagen/export_materials.py --out <folder>
-Writes <folder>/materials.json; copy that file to the execution host and point configs/data.json at it.
+EXP7_LEGACY_EXE / EXP7_LEGACY_INPUTS override the default locations next to the experiment checkout.
+Writes <folder>/materials.json; copy that file to runs/data/ on the execution host.
 """
 import argparse
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 from pathlib import Path
 
 EXP = Path(__file__).resolve().parents[2]
 PROJECT = EXP.parents[2]
-SOURCE_EXE = PROJECT/'3-Data/MDOF_BenchMark/Flexural_Shear_0.1.exe'
-SOURCE_INPUTS = PROJECT/'mdof-workbench/examples/validation/legacy-models/inputs'
+SOURCE_EXE = Path(os.environ.get('EXP7_LEGACY_EXE', PROJECT/'3-Data/MDOF_BenchMark/Flexural_Shear_0.1.exe'))
+SOURCE_INPUTS = Path(os.environ.get('EXP7_LEGACY_INPUTS', PROJECT/'mdof-workbench/examples/validation/legacy-models/inputs'))
+WINDOW_FLAGS = {'creationflags': subprocess.CREATE_NO_WINDOW} if os.name == 'nt' else {}
 HEADER = ('Blg_LB Stories height Year T1 T2 Area IM Site_CD Site_GP YieldOver PeakOver YieldStiff PGA dt Ttime '
           'StrucType matcodeinput OutputCtrl BlgCondition MasonryWallRatio Width')
 
@@ -43,8 +47,8 @@ def export(folder, b, stories, intensity, structure_type):
                b['site_category'], b['site_group'], -1, -1, -1, 1, 0.02, 1, structure_type, 3, 111000, -1, -1, -1]
         (folder/'inputs/BlgAttributes.txt').write_text('1\n' + HEADER + '\n' + ' '.join(map(str, row)) + '\n', encoding='ascii')
         (folder/'GMs/record.txt').write_text('51\n' + ''.join(f'{i*.02:.4f}\t0\n' for i in range(51)), encoding='ascii')
-        p = subprocess.run([str(folder/'legacy.exe')], cwd=folder, input=b'\n', capture_output=True, timeout=60,
-                           creationflags=subprocess.CREATE_NO_WINDOW)
+        os.chmod(folder/'legacy.exe', 0o755)
+        p = subprocess.run([str(folder/'legacy.exe')], cwd=folder, input=b'\n', capture_output=True, timeout=60, **WINDOW_FLAGS)
         (folder/'stdout.log').write_bytes(p.stdout)
         (folder/'stderr.log').write_bytes(p.stderr)
         if p.returncode or not result.exists():
