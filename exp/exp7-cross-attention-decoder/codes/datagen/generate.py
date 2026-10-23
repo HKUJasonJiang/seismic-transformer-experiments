@@ -282,7 +282,7 @@ def preflight(conf, workers):
         fine_meta, fine = simulate(probe, dt=conf['integration_dt_s']/2)
         dt = conf['integration_dt_s']
         # On the integration grid, absolute + ground must equal the second difference of the aligned displacement.
-        relative = r.acceleration + grid_ground
+        relative = r.acceleration + grid_ground[:, None]
         second = (displacement[2:] - 2*displacement[1:-1] + displacement[:-2])/dt**2
         identity = {f'shift_{s}': float(np.abs(relative[1+s:len(relative)-1+s] - second).max()/np.abs(relative).max())
                     for s in (-1, 0, 1)}
