@@ -41,7 +41,8 @@ def smoke(model, b, conf, scales):
         noheight = model(input_batch(changed, conf))
         reverse = predict(model, dict(inputs, positions=inputs['positions'].flip(-1), query_mask=inputs['query_mask'].flip(-1)))
         ones = torch.ones(len(inputs['ground']), 1, device=device)
-        roof = predict(model, dict(inputs, positions=ones, query_mask=ones.bool()))
+        roof_inputs = dict(inputs, positions=ones, query_mask=ones.bool())
+        roof = predict(model, roof_inputs)
         padded = predict(model, dict(inputs,
                                      positions=torch.cat((inputs['positions'], torch.full_like(inputs['positions'][:, :2], float('nan'))), 1),
                                      query_mask=torch.cat((inputs['query_mask'], torch.zeros_like(inputs['query_mask'][:, :2])), 1)))
@@ -61,7 +62,7 @@ def smoke(model, b, conf, scales):
         ground = torch.where(inputs['time_mask'], inputs['ground'][..., 0], 0.)
         valid = inputs['time_mask'][:, :, None] & inputs['query_mask'][:, None, :]
         torch.testing.assert_close(p['acceleration'], torch.where(valid, p['relative_acceleration'] + model.ground_sign*ground[:, :, None], 0.), **tol)
-        bad_inputs = [dict(roof, positions=torch.full_like(ones, value)) for value in (0., 1.2, float('nan'))]
+        bad_inputs = [dict(roof_inputs, positions=torch.full_like(ones, value)) for value in (0., 1.2, float('nan'))]
         untrained = (~model.trained_intensities).nonzero().flatten()
         if len(untrained):
             bad_inputs.append(dict(inputs, intensity=torch.full_like(inputs['intensity'], int(untrained[0]))))
