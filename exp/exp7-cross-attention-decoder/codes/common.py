@@ -134,6 +134,25 @@ def quantiles(values):
     return {'median': float(np.median(values)), 'p10': float(np.quantile(values, .1)), 'p90': float(np.quantile(values, .9))}
 
 
+def drift_summary(rows):
+    """Peak inter-story drift ratio errors from per-case PIDR lists (dimensionless drift ratio).
+
+    Building maximum: MSE (primary), RMSE, signed bias mean(pred-true) and relative bias mean((pred-true)/true).
+    Per floor: MSE and signed bias of each floor's peak drift, cases equally weighted, grouped by story count."""
+    true = np.array([max(r['PIDR_true']) for r in rows])
+    pred = np.array([max(r['PIDR_pred']) for r in rows])
+    error = pred - true
+    by_stories = {}
+    for n in sorted({r['stories'] for r in rows}):
+        group = [r for r in rows if r['stories'] == n]
+        floor_error = np.array([np.subtract(r['PIDR_pred'], r['PIDR_true']) for r in group])
+        by_stories[str(n)] = {'count': len(group), 'PIDR_floor_mse': np.mean(floor_error**2, 0).tolist(),
+                              'PIDR_floor_bias': np.mean(floor_error, 0).tolist()}
+    mse = float(np.mean(error**2))
+    return {'count': len(rows), 'PIDR_max_mse': mse, 'PIDR_max_rmse': mse**.5, 'PIDR_max_bias': float(np.mean(error)),
+            'PIDR_max_relative_bias': float(np.mean(error/true)), 'by_stories': by_stories}
+
+
 def rich_metrics(pred, b, entries):
     result = metrics(pred, b, entries)
     for i, r in enumerate(result['cases']):
@@ -157,6 +176,7 @@ def rich_metrics(pred, b, entries):
         if rows:
             s = result['summary'][name]
             s['PIDR_max_mse'] = float(np.mean([r['PIDR_max_mse'] for r in rows]))
+            s['PIDR'] = drift_summary(rows)
             s['PIDR_max_ratio'] = quantiles([r['PIDR_max_ratio'] for r in rows])
             s['roof_PFA_ratio'] = quantiles([r['roof_PFA_ratio'] for r in rows])
             s['damage_counts'] = {label: sum(op(r['DS_pred'], r['DS_ref']) for r in rows) for label, op in
