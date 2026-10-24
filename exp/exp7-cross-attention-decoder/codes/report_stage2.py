@@ -182,7 +182,9 @@ def main():
         preds = {}
         for v in VARIANTS:
             with np.load(EXP/'runs/stage2'/v/f'seed{shown[v]}'/f'{part}_predictions.npz', allow_pickle=False) as f:
-                preds[v] = {str(cid): (f['displacement'][i], f['acceleration'][i]) for i, cid in enumerate(f['case_ids'])}
+                # Each NpzFile access decompresses the whole array, so read every array once.
+                u_all, a_all, ids_all = f['displacement'], f['acceleration'], f['case_ids']
+            preds[v] = {str(cid): (u_all[i], a_all[i]) for i, cid in enumerate(ids_all)}
         rows = {r['id']: r for r in reports['exp5_decoder'][shown['exp5_decoder']]['splits'][part]['cases']}
         other = {r['id']: r for r in reports['cross_attention'][shown['cross_attention']]['splits'][part]['cases']}
         ids = [i for i in rows if group is None or meta[i]['structure_group'] == group]
