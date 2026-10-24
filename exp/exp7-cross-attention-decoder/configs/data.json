@@ -30,7 +30,7 @@
   },
   "intensity": {
     "measure": "Sa(T1), 5% damping, of the scaled record",
-    "sa_range_g": null,
+    "sa_range_g": [0.557208065638585, 3.3918694235141493],
     "calibration": {"records": 50, "cases_per_record": 8, "search_range_g": [0.02, 6.0],
                     "target_fractions": {"DS_0_1": 0.4, "DS_2": 0.3, "DS_3_up": 0.3}}
   },
