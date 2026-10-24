@@ -471,6 +471,20 @@ python exp/exp7-cross-attention-decoder/codes/summarize.py --config configs/stag
 - 第一条是主模型，使用全部训练记录。
 - 第二条是缩放曲线上的一个点，`--records` 取 7、30、100、300 或 1000。
 
+**自动排队**：`bash codes/stage2_queue.sh`。脚本按以下顺序执行，进度写在 `runs/stage2_queue.log`：
+
+1. 等数据生成结束；
+2. 运行数据审计；
+3. 按第 7.3 节的顺序依次训练：
+   - 主模型：`cross_attention` 和 `exp5_decoder`，各 3 个种子；
+   - 缩放曲线：7、30、100、300、1000 条训练记录，两个变体，各 3 个种子。
+
+规则：
+
+- 生成失败、审计失败，或者两个变体的第一次运行有任何一个失败，脚本都会停下。
+- 每次运行前，先确认 GPU 空闲显存不少于 70 GB，不足时等待。脚本不会停止别人的任务。
+- 已经完成的运行会自动跳过，可以重复启动。
+
 - 先单独跑 `full` 的第一个种子，确认自检全部通过，再跑其余 14 次。
 - 其余运行按 `exp5_decoder` → `ground_residual` → `local_snippet` → `cross_attention` → `full` 的顺序串行执行，每个变体跑完 3 个种子再进入下一个。
 - 种子必须是配置中声明的三个之一。
