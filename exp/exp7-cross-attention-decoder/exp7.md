@@ -279,7 +279,7 @@ exp7 同时处理这两点：
 | `generate.py run` | H200 | 多进程模拟，每 1,000 个算例写一个分片，可中断续跑；最后写出 `manifest.json` |
 | `shards.py` | H200 | 训练时读分片，校验哈希，输出与 exp5 相同的逐算例数据 |
 
-数据审计（第 5.7 节）的脚本还没写。
+数据审计（第 5.7 节）：`audit.py`，写出 `results/data_audit/audit.json` 和 12 张随机算例的全楼层图，任何规则不满足时以非零状态退出。
 
 生成逻辑参考了 `stage1/scripts/five_story_preview.py` 和 `stage1/scripts/generate_peer10.py`，复制后修改，不直接导入。主要差别：
 
@@ -524,7 +524,7 @@ python exp/exp7-cross-attention-decoder/codes/summarize.py --config configs/stag
 | `configs/run.json` | 已写 | 第一阶段：两套规模、五个变体、训练设置 |
 | `codes/datagen/*.py`、`configs/data.json`、`configs/stage2.json` | 已写 | 新数据集的清点、参数导出、生成、读取；第二阶段配置 |
 | `configs/record_split.json` | 由 `inventory.py` 生成 | 冻结的地震动划分 |
-| 数据审计脚本、第二阶段画图脚本、基线脚本 | 未写 | |
+| 第二阶段画图脚本、基线脚本 | 未写 | |
 
 ## 12. 已知限制
 
