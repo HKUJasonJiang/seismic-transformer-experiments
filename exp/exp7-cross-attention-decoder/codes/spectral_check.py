@@ -22,9 +22,18 @@ BANDS = [(0, 1), (1, 2), (2, 5), (5, 10), (10, 15), (15, 25.01)]
 COLORS = {'truth': '#243447', 'exp5_decoder': '#2b6cb0', 'cross_attention': '#e16a2d'}
 
 
+VARIANTS = ('exp5_decoder', 'ground_residual', 'local_snippet', 'local_snippet_absolute', 'cross_attention')
+
+
+def median_seed(variant, seeds):
+    dev = {s: read(EXP/'results/stage2'/variant/f'seed{s}'/'report.json')['splits']['development']['objective'] for s in seeds}
+    return {'seed': sorted(dev, key=dev.get)[1], 'development_objective': dev}
+
+
 def main():
     conf = read(EXP/'configs/data.json')
-    shown = read(EXP/'results/stage2/report_data.json')['shown_seed']
+    seeds = read(EXP/'configs/stage2.json')['seeds']
+    shown = {v: median_seed(v, seeds) for v in VARIANTS if (EXP/'results/stage2'/v).exists()}
     cases, items, _ = load_part(conf, 'unseen_record')
     truth = {c['id']: it for c, it in zip(cases, items)}
     rate = conf['sample_rate_hz']
@@ -32,7 +41,7 @@ def main():
     freq = np.fft.rfftfreq(n_t, 1/rate)
     out = {'frequency_resolution_hz': float(freq[1]), 'bands_hz': BANDS, 'variants': {}}
     spectra = {}
-    for v in ('exp5_decoder', 'cross_attention'):
+    for v in shown:
         seed = shown[v]['seed']
         with np.load(EXP/'runs/stage2'/v/f'seed{seed}'/'unseen_record_predictions.npz', allow_pickle=False) as f:
             pu, pa, ids = f['displacement'], f['acceleration'], f['case_ids']
