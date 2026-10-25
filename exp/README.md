@@ -10,6 +10,7 @@
 | exp4-unseen-earthquakes | 已完成：固定 A+B，已见结构遇到未训练地震动，非线性损伤明显低估 | [exp4.md](exp4-unseen-earthquakes/exp4.md) |
 | exp5-normalized-floor-query | 共享归一化楼层查询；多结构、多地震动训练，周期和地震动分别测试 | [exp5.md](exp5-normalized-floor-query/exp5.md) |
 | exp6-gm-scaling-structure-ood | 已合并到 exp7，只保留原始设计 | [exp6.md](exp6-gm-scaling-structure-ood/exp6.md) |
-| exp7-cross-attention-decoder | 模型代码已写、未运行：交叉注意力解码器、相对加速度输出、局部地震动片段、PGA 幅值分解；先在 exp5 数据上五个变体对照，再在新 KNET 数据集上做记录数缩放曲线与层数/T1 内插外推（数据代码未写） | [exp7.md](exp7-cross-attention-decoder/exp7.md) |
+| exp7-cross-attention-decoder | 已完成：KNET 框架数据集（58,424 算例）、训练记录数缩放曲线、层数与 T1 内插外推；exp5 风格 MLP 解码器优于交叉注意力，加地面项改善 5–10 Hz 但 10 Hz 以上多出能量 | [exp7.md](exp7-cross-attention-decoder/exp7.md) |
+| exp8-gm-encoder-query-decoders | 运行中：编码器只读地震动、建筑信息只进解码器（可一次编码多次查询）；解码器为带结构 FiLM 的 MLP 或全频带 FNO，与 exp7 最佳模型对照 | [exp8.md](exp8-gm-encoder-query-decoders/exp8.md) |
 
 历史两个版本保留原报告及原始指标，不能把旧指标改名成 MSE。新版本面向用户统一报告物理单位 MSE。历史源文件按 `codes/src`、`codes/scripts`、`codes/configs` 保留原相对布局；复现需要配置同版数据与权重目录，实际运行来源以原 run 的 provenance 为准。
