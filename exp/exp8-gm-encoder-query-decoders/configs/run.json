@@ -1,0 +1,51 @@
+{
+  "version": "exp8-gm-encoder-query-decoders-v1",
+  "stage": "exp8",
+  "device": "cuda:0",
+  "allowed_gpus": ["5090", "H200"],
+  "dataset_format": "exp7_shards",
+  "data_experiment": "../exp7-cross-attention-decoder",
+  "seeds": [20261024, 20261025, 20261026],
+  "intensity_vocabulary": [6, 7, 8, 9],
+  "structure_features": [
+    {"name": "stories", "transform": "linear", "scale": 10.0},
+    {"name": "T1_s", "transform": "linear", "scale": 1.0}
+  ],
+  "model_preset": "base",
+  "model_presets": {
+    "base": {
+      "sample_rate_hz": 50.0, "patch_size": 60, "d_model": 256, "heads": 8,
+      "encoder_layers": 6, "decoder_layers": 4, "ff_multiplier": 4, "dropout": 0.05,
+      "numeric_embedding_dim": 64, "category_embedding_dim": 32, "num_structure_types": 4,
+      "encoder_conditioning": "none", "decoder_type": "concat", "decoder_structure": "film",
+      "floor_fourier_features": 6, "local_snippet": false, "snippet_context": 30,
+      "ground_residual": false, "ground_sign": -1, "amplitude_factorization": false,
+      "concat_query_dim": 32, "concat_hidden_dim": 256,
+      "fno_width": 64, "fno_layers": 4, "fno_mix_modes": 96, "fno_token_channels": 48, "fno_sequence_points": 3600
+    }
+  },
+  "variants": {
+    "control_film_mlp": {"encoder_conditioning": "film", "decoder_structure": "none"},
+    "gm_mlp": {},
+    "gm_fno": {"decoder_type": "fno"}
+  },
+  "training_record_counts": [],
+  "evaluation_splits": ["train", "development", "seen_record_reference", "unseen_record", "structure_only", "joint", "cross_database"],
+  "holdout_parts": ["structure_only", "joint"],
+  "holdout_groups": ["story_interpolation", "story_extrapolation", "period_interpolation", "period_extrapolation"],
+  "unseen_record_parts": ["development", "unseen_record", "joint", "cross_database"],
+  "save_predictions": ["unseen_record", "joint", "structure_only", "cross_database"],
+  "train_monitor_cases": 2000,
+  "steps": "auto",
+  "batch_size": 32,
+  "evaluate_every": null,
+  "learning_rate": 0.001,
+  "minimum_learning_rate": 0.00003,
+  "warmup_steps": 100,
+  "weight_decay": 0.00001,
+  "max_grad_norm": 1.0,
+  "normalization": "per_case",
+  "response_weights": [1.0, 1.0, 1.0],
+  "checkpoint_selection": "development_objective",
+  "scope": "Same data, splits, loss and training schedule as exp7 stage 2. Only where the building enters the model and the decoder type change."
+}
