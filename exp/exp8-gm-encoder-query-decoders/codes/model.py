@@ -224,7 +224,7 @@ class SpectralBlock(nn.Module):
 class FNODecoder(nn.Module):
     """Per-floor 1D FNO over the full 50 Hz time axis.
 
-    Channels at each time step: encoder tokens (projected, linearly interpolated from patch centres to every
+    Channels at each time step: encoder tokens (projected, held constant over each 1.2 s patch for every
     sample), the ground signal, and constant channels for the floor position and the structure condition.
     FiLM from (floor, structure) scales and shifts every block (zero-initialized)."""
 
@@ -249,7 +249,8 @@ class FNODecoder(nn.Module):
         b, patches, d = memory.shape
         length = patches*self.patch_size
         floors = positions.shape[1]
-        tokens = F.interpolate(self.token(memory).transpose(1, 2), size=length, mode='linear', align_corners=False)
+        # Each sample takes its own patch's token (no interpolation across patches, so padding cannot leak in).
+        tokens = self.token(memory).transpose(1, 2).repeat_interleave(self.patch_size, dim=2)
         ground = F.pad(signal, (0, length - signal.shape[1]))[:, None]
         phase = positions[..., None]*self.floor_frequencies
         floor = self.floor(torch.cat((positions[..., None], phase.sin(), phase.cos()), dim=-1))
