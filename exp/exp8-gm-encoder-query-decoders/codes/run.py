@@ -117,6 +117,7 @@ def main():
     torch.set_num_threads(4)
     torch.set_num_interop_threads(2)
     torch.backends.mha.set_fastpath_enabled(False)
+    torch.backends.cudnn.allow_tf32 = False  # FNO 1x1 convolutions: exact checks and evaluation use full FP32
     assert torch.cuda.is_available() and any(g in torch.cuda.get_device_name() for g in conf['allowed_gpus'])
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
@@ -182,7 +183,7 @@ def main():
     start = time.perf_counter()
     for step in range(start_step+1, conf['steps']+1):
         model.train()
-        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cuda.matmul.allow_tf32 = torch.backends.cudnn.allow_tf32 = True
         index = torch.randint(len(cases), (conf['batch_size'],), device=conf['device'])
         sub = take(b, index)
         lr = conf['minimum_learning_rate'] + .5*(conf['learning_rate']-conf['minimum_learning_rate'])*(1+math.cos(math.pi*step/conf['steps']))
@@ -198,7 +199,7 @@ def main():
         optimizer.step()
         if step % conf['evaluate_every'] == 0 or step == conf['steps']:
             model.eval()
-            torch.backends.cuda.matmul.allow_tf32 = False
+            torch.backends.cuda.matmul.allow_tf32 = torch.backends.cudnn.allow_tf32 = False
             with torch.no_grad():
                 p, score = evaluate(model, monitor, conf, scales)
                 dp, dscore = evaluate(model, dev, conf, scales)
@@ -223,7 +224,7 @@ def main():
                               'development_objective': dscore, 'train_u_mse': tm['u_all_mse'],
                               'train_a_mse': tm['a_all_mse']}), flush=True)
     model, _ = load_model(run_dir/'best.pt', conf['device'])
-    torch.backends.cuda.matmul.allow_tf32 = False
+    torch.backends.cuda.matmul.allow_tf32 = torch.backends.cudnn.allow_tf32 = False
     frozen = state_hash(model)
     ck = torch.load(run_dir/'best.pt', map_location='cpu', weights_only=True)
     report = {'provenance': prov, 'best_step': ck['step'], 'checkpoint_selection': conf['checkpoint_selection'],
