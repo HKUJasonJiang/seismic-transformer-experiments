@@ -28,6 +28,7 @@
     "exp5_decoder": {"decoder_type": "concat", "local_snippet": false, "ground_residual": false, "amplitude_factorization": false},
     "ground_residual": {"decoder_type": "concat", "local_snippet": false, "amplitude_factorization": false},
     "local_snippet": {"decoder_type": "concat", "amplitude_factorization": false},
+    "local_snippet_absolute": {"decoder_type": "concat", "ground_residual": false, "amplitude_factorization": false},
     "cross_attention": {"amplitude_factorization": false},
     "full": {}
   },
